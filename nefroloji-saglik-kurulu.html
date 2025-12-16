@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nefroloji Sağlık Kurulu</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        medical: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .input-field {
+            transition: all 0.3s ease;
+        }
+        .input-field:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(14, 165, 233, 0.2);
+        }
+        .checkbox-wrapper input:checked + div {
+            background-color: #f0f9ff;
+            border-color: #0ea5e9;
+            color: #0c4a6e;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800">
+
+    <!-- Header -->
+    <header class="bg-white shadow-md border-b border-slate-200 sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-medical-600 text-white p-2 rounded-lg">
+                    <i class="fa-solid fa-hospital-user text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-slate-800">Nefroloji Sağlık Kurulu</h1>
+                    <p class="text-xs text-slate-500">Klinik Karar Destek Sistemi</p>
+                </div>
+            </div>
+            <button onclick="window.print()" class="text-slate-500 hover:text-medical-600 transition">
+                <i class="fa-solid fa-print text-lg"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-6 space-y-8 max-w-4xl">
+
+        <!-- 1. BÖLÜM: PROTEINURIA CALCULATOR -->
+        <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="bg-medical-50 border-b border-medical-100 p-4 flex items-center space-x-2">
+                <i class="fa-solid fa-vial text-medical-600"></i>
+                <h2 class="font-semibold text-medical-900">Proteinüri Hesaplayıcı (Spot İdrar)</h2>
+            </div>
+            
+            <div class="p-6">
+                <!-- Info Alert -->
+                <div class="mb-6 bg-blue-50 border-l-4 border-medical-500 p-4 text-sm text-blue-800">
+                    <p class="font-bold mb-1">Algoritma Bilgisi:</p>
+                    <p>Bu hesaplayıcı, spot idrar protein/kreatinin oranını (mg/gr) hesaplar. <strong>3000 mg/gr</strong> üzeri değerler <strong>Nefrotik Düzey</strong>, altı ise <strong>Non-Nefrotik</strong> olarak değerlendirilir.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <!-- Spot Protein Input -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">Spot İdrar Protein</label>
+                        <div class="relative">
+                            <input type="number" id="spotProtein" 
+                                class="input-field w-full pl-4 pr-16 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-medical-500 focus:border-medical-500 outline-none" 
+                                placeholder="Örn: 1500">
+                            <span class="absolute right-4 top-3 text-slate-400 text-sm font-medium">mg/L</span>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-1 ml-1">Laboratuvar sonucu (mg/L)</p>
+                    </div>
+
+                    <!-- Spot Creatinine Input -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">Spot İdrar Kreatinin</label>
+                        <div class="relative">
+                            <input type="number" id="spotCreatinine" 
+                                class="input-field w-full pl-4 pr-16 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-medical-500 focus:border-medical-500 outline-none" 
+                                placeholder="Örn: 100">
+                            <span class="absolute right-4 top-3 text-slate-400 text-sm font-medium">mg/dL</span>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-1 ml-1">Laboratuvar sonucu (mg/dL)</p>
+                    </div>
+                </div>
+
+                <div class="flex justify-end mb-6">
+                    <button onclick="calculateProteinuria()" 
+                        class="bg-medical-600 hover:bg-medical-700 text-white font-medium py-2 px-6 rounded-lg transition duration-200 flex items-center shadow-lg shadow-medical-500/30">
+                        <i class="fa-solid fa-calculator mr-2"></i> Hesapla
+                    </button>
+                </div>
+
+                <!-- Result Area -->
+                <div id="proteinResultBox" class="hidden animate-fade-in">
+                    <div class="bg-slate-50 rounded-lg p-5 border border-slate-200">
+                        <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+                            <div>
+                                <p class="text-sm text-slate-500 font-medium uppercase tracking-wide">Protein / Kreatinin Oranı</p>
+                                <div class="flex items-baseline space-x-2 mt-1">
+                                    <span id="pcrValue" class="text-3xl font-bold text-slate-800">--</span>
+                                    <span class="text-lg text-slate-600">mg/gr</span>
+                                </div>
+                            </div>
+                            <div id="nephroticBadge" class="px-4 py-2 rounded-full text-sm font-bold border flex items-center space-x-2">
+                                <!-- Status injected here -->
+                            </div>
+                        </div>
+                        <div class="mt-4 pt-4 border-t border-slate-200 text-sm text-slate-600">
+                            <p><i class="fa-solid fa-circle-info mr-1 text-medical-500"></i> <span id="interpretationText">--</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. BÖLÜM: HİPERTANSİYON ORAN HESAPLAYICI -->
+        <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="bg-red-50 border-b border-red-100 p-4 flex items-center space-x-2">
+                <i class="fa-solid fa-heart-pulse text-red-600"></i>
+                <h2 class="font-semibold text-red-900">Hipertansiyon Engel Oranı</h2>
+            </div>
+            <div class="p-6">
+                
+                <div class="mb-4 pb-4 border-b border-slate-100">
+                    <label class="checkbox-wrapper flex items-center cursor-pointer">
+                        <input type="checkbox" id="ht_meds" class="hidden peer" onchange="calculateHT()">
+                        <div class="w-6 h-6 border-2 border-slate-300 rounded flex items-center justify-center mr-3 peer-checked:bg-medical-600 peer-checked:border-medical-600 transition-all">
+                            <i class="fa-solid fa-check text-white text-xs"></i>
+                        </div>
+                        <span class="font-medium text-slate-700">Antihipertansif tedavi kullanıyor</span>
+                    </label>
+                </div>
+
+                <div id="ht_options" class="opacity-50 pointer-events-none transition-all duration-300">
+                    <h3 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-3">Komplikasyonlar / Bulgular</h3>
+                    
+                    <div class="space-y-3">
+                        <!-- Klas 3 Adayları (Ağır) -->
+                        <div class="p-3 bg-slate-50 rounded border border-slate-200">
+                            <p class="text-xs text-slate-400 mb-2 font-bold">AĞIR BULGULAR (Klas 3 Kriterleri)</p>
+                            
+                            <label class="checkbox-wrapper flex items-start cursor-pointer mb-2">
+                                <input type="checkbox" name="ht_severe" class="hidden peer" onchange="calculateHT()">
+                                <div class="w-5 h-5 mt-0.5 border-2 border-slate-300 rounded flex items-center justify-center mr-2 peer-checked:bg-red-500 peer-checked:border-red-500">
+                                    <i class="fa-solid fa-check text-white text-[10px]"></i>
+                                </div>
+                                <span class="text-sm text-slate-700">Diyastolik kan basıncı > 120 mmHg (maksimal tedaviye rağmen)</span>
+                            </label>
+
+                            <label class="checkbox-wrapper flex items-start cursor-pointer mb-2">
+                                <input type="checkbox" name="ht_severe" class="hidden peer" onchange="calculateHT()">
+                                <div class="w-5 h-5 mt-0.5 border-2 border-slate-300 rounded flex items-center justify-center mr-2 peer-checked:bg-red-500 peer-checked:border-red-500">
+                                    <i class="fa-solid fa-check text-white text-[10px]"></i>
+                                </div>
+                                <span class="text-sm text-slate-700">Proteinüri ve böbrek fonksiyon bozukluğu (Cr/BUN artışı veya Klerens &lt;%50)</span>
+                            </label>
+
+                            <label class="checkbox-wrapper flex items-start cursor-pointer mb-2">
+                                <input type="checkbox" name="ht_severe" class="hidden peer" onchange="calculateHT()">
+                                <div class="w-5 h-5 mt-0.5 border-2 border-slate-300 rounded flex items-center justify-center mr-2 peer-checked:bg-red-500 peer-checked:border-red-500">
+                                    <i class="fa-solid fa-check text-white text-[10px]"></i>
+                                </div>
+                                <span class="text-sm text-slate-700">Hipertansif serebrovasküler hastalık ve kalıcı nörolojik defisit</span>
+                            </label>
+
+                            <label class="checkbox-wrapper flex items-start cursor-pointer mb-2">
+                                <input type="checkbox" name="ht_severe" class="hidden peer" onchange="calculateHT()">
+                                <div class="w-5 h-5 mt-0.5 border-2 border-slate-300 rounded flex items-center justify-center mr-2 peer-checked:bg-red-500 peer-checked:border-red-500">
+                                    <i class="fa-solid fa-check text-white text-[10px]"></i>
+                                </div>
+                                <span class="text-sm text-slate-700">Sol ventrikül hipertrofisi (Klas 3 için)</span>
+                            </label>
+
+                             <label class="checkbox-wrapper flex items-start cursor-pointer">
+                                <input type="checkbox" name="ht_severe" class="hidden peer" onchange="calculateHT()">
+                                <div class="w-5 h-5 mt-0.5 border-2 border-slate-300 rounded flex items-center justify-center mr-2 peer-checked:bg-red-500 peer-checked:border-red-500">
+                                    <i class="fa-solid fa-check text-white text-[10px]"></i>
+                                </div>
+                                <span class="text-sm text-slate-700">Hipertansif retinopati (evre 3–4)</span>
+                            </label>
+                        </div>
+
+                        <!-- Klas 2 Adayları (Hafif) -->
+                        <div class="p-3 bg-slate-50 rounded border border-slate-200">
+                            <p class="text-xs text-slate-400 mb-2 font-bold">DİĞER BULGULAR (Klas 2 Kriterleri)</p>
+                            
+                            <label class="checkbox-wrapper flex items-start cursor-pointer mb-2">
+                                <input type="checkbox" name="ht_mild" class="hidden peer" onchange="calculateHT()">
+                                <div class="w-5 h-5 mt-0.5 border-2 border-slate-300 rounded flex items-center justify-center mr-2 peer-checked:bg-orange-400 peer-checked:border-orange-400">
+                                    <i class="fa-solid fa-check text-white text-[10px]"></i>
+                                </div>
+                                <span class="text-sm text-slate-700">Proteinüri</span>
+                            </label>
+
+                            <label class="checkbox-wrapper flex items-start cursor-pointer mb-2">
+                                <input type="checkbox" name="ht_mild" class="hidden peer" onchange="calculateHT()">
+                                <div class="w-5 h-5 mt-0.5 border-2 border-slate-300 rounded flex items-center justify-center mr-2 peer-checked:bg-orange-400 peer-checked:border-orange-400">
+                                    <i class="fa-solid fa-check text-white text-[10px]"></i>
+                                </div>
+                                <span class="text-sm text-slate-700">Hipertansif serebrovasküler hastalık</span>
+                            </label>
+
+                             <label class="checkbox-wrapper flex items-start cursor-pointer mb-2">
+                                <input type="checkbox" name="ht_mild" class="hidden peer" onchange="calculateHT()">
+                                <div class="w-5 h-5 mt-0.5 border-2 border-slate-300 rounded flex items-center justify-center mr-2 peer-checked:bg-orange-400 peer-checked:border-orange-400">
+                                    <i class="fa-solid fa-check text-white text-[10px]"></i>
+                                </div>
+                                <span class="text-sm text-slate-700">Hipertansif retinopati (Gunn belirtileri)</span>
+                            </label>
+
+                            <label class="checkbox-wrapper flex items-start cursor-pointer">
+                                <input type="checkbox" name="ht_mild" class="hidden peer" onchange="calculateHT()">
+                                <div class="w-5 h-5 mt-0.5 border-2 border-slate-300 rounded flex items-center justify-center mr-2 peer-checked:bg-orange-400 peer-checked:border-orange-400">
+                                    <i class="fa-solid fa-check text-white text-[10px]"></i>
+                                </div>
+                                <span class="text-sm text-slate-700">Sol ventrikül hipertrofisi</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HT Result -->
+                <div id="htResultBox" class="hidden mt-6 p-4 rounded-lg bg-red-50 border border-red-200 flex justify-between items-center animate-fade-in">
+                    <div>
+                        <p class="text-sm text-red-700 font-bold" id="htClassText">Klas 1</p>
+                        <p class="text-xs text-red-600 opacity-80" id="htDescText">Komplikasyonsuz HT</p>
+                    </div>
+                    <div class="text-3xl font-bold text-red-800" id="htRate">%10</div>
+                </div>
+
+            </div>
+        </section>
+
+
+        <!-- 3. BÖLÜM: NEFROLOJİ DİĞER ORANLAR -->
+        <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="bg-indigo-50 border-b border-indigo-100 p-4 flex items-center space-x-2">
+                <i class="fa-solid fa-kidney text-indigo-600"></i>
+                <h2 class="font-semibold text-indigo-900">Nefroloji (Böbrek Hastalıkları) Engel Oranı</h2>
+            </div>
+            <div class="p-6">
+                <label class="block text-sm font-medium text-slate-700 mb-2">Klinik Durum Seçiniz</label>
+                <select id="nephroSelect" onchange="calculateNephro()" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white text-slate-700 text-sm">
+                    <option value="0">Seçiniz...</option>
+                    <optgroup label="Proteinüri / Nefrotik Sendrom">
+                        <option value="40">1. Nonnefrotik proteinüri (6 ay tedaviye yanıtsız, kreatinin normal)</option>
+                        <option value="60">2. Nefrotik sendrom (6 ay tedaviye yanıtsız, kreatinin normal)</option>
+                    </optgroup>
+                    <optgroup label="Kronik Böbrek Yetmezliği (Diyalizsiz)">
+                        <option value="20">3a. Kreatinin klerensi 50–65 ml/dk</option>
+                        <option value="40">3b. Kreatinin klerensi 40–49 ml/dk</option>
+                        <option value="60">3c. Kreatinin klerensi 25–39 ml/dk</option>
+                    </optgroup>
+                    <optgroup label="İleri Evre / Transplant">
+                        <option value="90">4. Diyaliz tedavisi gerektiren KBY</option>
+                        <option value="70">5. Böbrek nakli (Renal transplant)</option>
+                    </optgroup>
+                </select>
+
+                <div id="nephroResultBox" class="hidden mt-6 p-4 rounded-lg bg-indigo-50 border border-indigo-200 flex justify-between items-center animate-fade-in">
+                    <div>
+                        <p class="text-sm text-indigo-700 font-bold">Nefrolojik Engel Oranı</p>
+                    </div>
+                    <div class="text-3xl font-bold text-indigo-800" id="nephroRate">--</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FOOTER INFO -->
+        <footer class="text-center text-slate-400 text-xs py-4">
+            <p>Bu hesaplamalar yardımcı araçlardır. Kesin tanı için klinik değerlendirme esastır.</p>
+            <p>&copy; 2024 Nefroloji Sağlık Kurulu Sistemi</p>
+        </footer>
+
+    </main>
+
+    <script>
+        // --- Proteinuria Logic ---
+        function calculateProteinuria() {
+            const pInput = document.getElementById('spotProtein');
+            const cInput = document.getElementById('spotCreatinine');
+            const proteinMgL = parseFloat(pInput.value);
+            const creatinineMgdL = parseFloat(cInput.value);
+            const resultBox = document.getElementById('proteinResultBox');
+
+            if (isNaN(proteinMgL) || isNaN(creatinineMgdL) || creatinineMgdL === 0) {
+                alert("Lütfen geçerli değerler giriniz. Kreatinin 0 olamaz.");
+                return;
+            }
+
+            const proteinMgdL = proteinMgL / 10;
+            const resultMgGr = (proteinMgdL / creatinineMgdL) * 1000;
+            
+            document.getElementById('pcrValue').textContent = Math.round(resultMgGr);
+            const badge = document.getElementById('nephroticBadge');
+            const interpretation = document.getElementById('interpretationText');
+
+            resultBox.classList.remove('hidden');
+
+            if (resultMgGr > 3000) {
+                badge.className = "px-4 py-2 rounded-full text-sm font-bold border flex items-center space-x-2 bg-red-100 text-red-700 border-red-200";
+                badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> <span>NEFROTİK DÜZEY</span>`;
+                interpretation.textContent = "Proteinüri 3000 mg/gr (3 gr/gr) üzerinde. Nefrotik sendrom açısından klinik değerlendirme önerilir.";
+            } else {
+                badge.className = "px-4 py-2 rounded-full text-sm font-bold border flex items-center space-x-2 bg-green-100 text-green-700 border-green-200";
+                badge.innerHTML = `<i class="fa-solid fa-check-circle"></i> <span>NON-NEFROTİK</span>`;
+                if (resultMgGr < 150) {
+                     interpretation.textContent = "Normal sınırlar içerisinde (Fizyolojik).";
+                } else if (resultMgGr >= 150 && resultMgGr < 500) {
+                     interpretation.textContent = "Hafif artmış proteinüri. Takip önerilir.";
+                } else {
+                     interpretation.textContent = "Nefrotik altı (subnefrotik) proteinüri. Etyolojik araştırma gerekebilir.";
+                }
+            }
+        }
+
+        // --- Hypertension Logic ---
+        function calculateHT() {
+            const hasMeds = document.getElementById('ht_meds').checked;
+            const htOptions = document.getElementById('ht_options');
+            const resultBox = document.getElementById('htResultBox');
+            const classText = document.getElementById('htClassText');
+            const descText = document.getElementById('htDescText');
+            const rateText = document.getElementById('htRate');
+
+            // Enable/Disable sections based on Meds
+            if (hasMeds) {
+                htOptions.classList.remove('opacity-50', 'pointer-events-none');
+                resultBox.classList.remove('hidden');
+            } else {
+                htOptions.classList.add('opacity-50', 'pointer-events-none');
+                resultBox.classList.add('hidden');
+                // Reset checkboxes if unchecked
+                document.querySelectorAll('input[name="ht_severe"]').forEach(cb => cb.checked = false);
+                document.querySelectorAll('input[name="ht_mild"]').forEach(cb => cb.checked = false);
+                return;
+            }
+
+            // Count findings
+            let severeCount = 0;
+            document.querySelectorAll('input[name="ht_severe"]:checked').forEach(() => severeCount++);
+
+            let mildCount = 0;
+            document.querySelectorAll('input[name="ht_mild"]:checked').forEach(() => mildCount++);
+
+            // Logic:
+            // Class 3 (%50): Meds + 2 or more severe findings
+            // Class 2 (%20): Meds + 1 mild OR (1 severe - fallback logic usually implies any complication puts you at least here)
+            // Strict logic per text: 
+            // Klas 2: "aşağıdakilerden biri varsa" (list includes specific mild items)
+            // Klas 3: "aşağıdakilerden iki veya daha fazlası varsa" (list includes specific severe items)
+            
+            // Note: Often in medical boards, a single severe item not meeting the "2+" criteria for Class 3 might still qualify as a complication for Class 2.
+            // However, sticking strictly to the provided text for accuracy.
+
+            let rate = 10;
+            let className = "Klas 1";
+            let desc = "Komplikasyonu olmayan HT";
+
+            // Check Class 3 Condition
+            if (severeCount >= 2) {
+                rate = 50;
+                className = "Klas 3";
+                desc = "Ağır komplikasyonlu HT (2 veya fazla bulgu)";
+            } 
+            // Check Class 2 Condition
+            // User prompt says Class 2 needs "one of the following". The list provided in prompt for Class 2 was separate.
+            // So we check if any checked item exists in the Mild list.
+            else if (mildCount >= 1 || severeCount === 1) { 
+                // Added severeCount === 1 to cover cases where patient has 1 severe item but not 2. 
+                // Medically this is usually Class 2.
+                rate = 20;
+                className = "Klas 2";
+                desc = "Komplikasyonlu HT";
+            }
+
+            rateText.textContent = "%" + rate;
+            classText.textContent = className;
+            descText.textContent = desc;
+        }
+
+        // --- Nephrology Rate Logic ---
+        function calculateNephro() {
+            const select = document.getElementById('nephroSelect');
+            const resultBox = document.getElementById('nephroResultBox');
+            const rateText = document.getElementById('nephroRate');
+            const val = select.value;
+
+            if (val === "0") {
+                resultBox.classList.add('hidden');
+            } else {
+                resultBox.classList.remove('hidden');
+                rateText.textContent = "%" + val;
+            }
+        }
+
+        // Add Enter Key Support
+        document.querySelectorAll('input[type="number"]').forEach(item => {
+            item.addEventListener('keypress', event => {
+                if (event.key === 'Enter') {
+                    calculateProteinuria();
+                }
+            })
+        });
+    </script>
+</body>
+</html>
