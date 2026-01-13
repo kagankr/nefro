@@ -3,459 +3,821 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KBH Tedavi Algoritması</title>
+  <title>KBH Tedavi Hesaplayıcı & Algoritması</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: Inter, system-ui, sans-serif; }
+    body { font-family: 'Inter', sans-serif; }
+    /* Chrome, Safari, Edge, Opera için input oklarını gizle */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    /* Firefox için */
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+    .checkbox-wrapper:checked + div {
+      background-color: #eff6ff; /* blue-50 */
+      border-color: #3b82f6; /* blue-500 */
+      color: #1e3a8a; /* blue-900 */
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    .checkbox-wrapper:checked + div .check-icon {
+      display: block;
+    }
   </style>
 </head>
-<body class="bg-slate-50 min-h-screen p-4 md:p-8 flex items-center justify-center">
-  <div class="max-w-4xl w-full bg-white shadow-xl rounded-2xl overflow-hidden border border-slate-200 flex flex-col min-h-[600px]">
-    <div class="bg-indigo-800 text-white p-6">
-      <h1 class="text-2xl font-bold">KBH Tedavi Rehberi</h1>
-      <p class="text-indigo-200 text-sm mt-1">Klinik Karar Destek</p>
+<body class="bg-slate-50 min-h-screen p-2 md:p-6 font-sans text-slate-800">
+
+  <div class="max-w-5xl mx-auto bg-white shadow-xl rounded-2xl overflow-hidden border border-slate-200">
+    
+    <!-- Header -->
+    <div class="bg-slate-900 text-white p-5 shadow-md">
+      <div class="flex justify-between items-center">
+        <div>
+          <h1 class="text-xl md:text-2xl font-bold tracking-tight">KBH Tedavi Asistanı</h1>
+          <p class="text-slate-400 text-xs md:text-sm mt-1">SUT Kuralları & İlaç Doz Yönetimi</p>
+        </div>
+        <div class="hidden md:block text-right opacity-80 text-xs">
+          <div>Düzeltilmiş Ca Hesaplayıcı</div>
+          <div>Klinik Karar Destek</div>
+        </div>
+      </div>
     </div>
-    <div id="content" class="p-6 flex-1 overflow-y-auto">
-      <!-- dynamic content here -->
+
+    <!-- Main Content Area -->
+    <div class="p-4 md:p-8">
+      
+      <!-- INPUT SECTION -->
+      <div id="input-section" class="space-y-8 animate-fade-in">
+        
+        <!-- 1. Hasta Tipi -->
+        <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+          <label class="block text-sm font-bold text-slate-800 mb-3 uppercase tracking-wide flex items-center">
+            <span class="bg-indigo-100 text-indigo-700 rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2 font-bold">1</span>
+            Hasta Grubu
+          </label>
+          <div class="grid grid-cols-2 gap-4">
+            <button onclick="setPatientType('predialysis')" id="btn-pre" class="p-4 border-2 rounded-xl text-center font-semibold transition-all duration-200 border-slate-200 text-slate-500 hover:bg-slate-50">
+              Evre 4-5 (Prediyaliz)
+            </button>
+            <button onclick="setPatientType('dialysis')" id="btn-dia" class="p-4 border-2 rounded-xl text-center font-semibold transition-all duration-200 border-indigo-600 bg-indigo-50 text-indigo-700 shadow-sm">
+              Diyaliz (HD/PD)
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. Mevcut İlaçlar -->
+        <div class="bg-slate-50 p-5 rounded-xl border border-slate-200">
+          <label class="block text-sm font-bold text-slate-800 mb-4 uppercase tracking-wide flex items-center border-b pb-2 border-slate-200">
+            <span class="bg-indigo-100 text-indigo-700 rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2 font-bold">2</span>
+            Hastanın Mevcut İlaçları
+          </label>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            
+            <!-- Ca Binder -->
+            <label class="cursor-pointer relative group">
+              <input type="checkbox" name="meds" value="ca_binder" class="checkbox-wrapper absolute opacity-0 w-full h-full cursor-pointer">
+              <div class="p-3 border rounded-lg bg-white border-slate-300 hover:border-blue-400 transition flex flex-col h-full relative">
+                <div class="flex justify-between items-start mb-1">
+                  <span class="font-bold text-sm text-slate-800">Kalsiyumlu Bağlayıcı</span>
+                  <svg class="w-5 h-5 text-blue-600 check-icon hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                </div>
+                <div class="text-xs text-slate-500 mb-2">Ca-Asetat / Ca-Karbonat</div>
+                <div class="text-[10px] text-slate-400 italic">(Anti-fosfat, Phos-Ex, Fix-at)</div>
+              </div>
+            </label>
+
+            <!-- Sevelamer -->
+            <label class="cursor-pointer relative group">
+              <input type="checkbox" name="meds" value="sevelamer" class="checkbox-wrapper absolute opacity-0 w-full h-full cursor-pointer">
+              <div class="p-3 border rounded-lg bg-white border-slate-300 hover:border-blue-400 transition flex flex-col h-full relative">
+                <div class="flex justify-between items-start mb-1">
+                  <span class="font-bold text-sm text-slate-800">Sevelamer</span>
+                  <svg class="w-5 h-5 text-blue-600 check-icon hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                </div>
+                <div class="text-xs text-slate-500 mb-2">Sevelamer Karbonat</div>
+                <div class="text-[10px] text-slate-400 italic">(Renvela, Sevaren, Lameris)</div>
+              </div>
+            </label>
+
+            <!-- Lanthanum -->
+            <label class="cursor-pointer relative group">
+              <input type="checkbox" name="meds" value="lanthanum" class="checkbox-wrapper absolute opacity-0 w-full h-full cursor-pointer">
+              <div class="p-3 border rounded-lg bg-white border-slate-300 hover:border-blue-400 transition flex flex-col h-full relative">
+                <div class="flex justify-between items-start mb-1">
+                  <span class="font-bold text-sm text-slate-800">Lanthanum</span>
+                  <svg class="w-5 h-5 text-blue-600 check-icon hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                </div>
+                <div class="text-xs text-slate-500 mb-2">Çiğneme Tableti</div>
+                <div class="text-[10px] text-slate-400 italic">(Antax, Fosrenol)</div>
+              </div>
+            </label>
+
+            <!-- Oral Aktif D Vit -->
+            <label class="cursor-pointer relative group">
+              <input type="checkbox" name="meds" value="oral_vit_d" class="checkbox-wrapper absolute opacity-0 w-full h-full cursor-pointer">
+              <div class="p-3 border rounded-lg bg-white border-slate-300 hover:border-blue-400 transition flex flex-col h-full relative">
+                <div class="flex justify-between items-start mb-1">
+                  <span class="font-bold text-sm text-slate-800">Oral Aktif D Vit</span>
+                  <svg class="w-5 h-5 text-blue-600 check-icon hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                </div>
+                <div class="text-xs text-slate-500 mb-2">Kalsitriol (Tablet/Kapsül)</div>
+                <div class="text-[10px] text-slate-400 italic">(Rocaltrol, Qalyviz, Ostriol Kapsül)</div>
+              </div>
+            </label>
+
+            <!-- IV Aktif D Vit -->
+            <label class="cursor-pointer relative group">
+              <input type="checkbox" name="meds" value="iv_vit_d" class="checkbox-wrapper absolute opacity-0 w-full h-full cursor-pointer">
+              <div class="p-3 border rounded-lg bg-white border-slate-300 hover:border-blue-400 transition flex flex-col h-full relative">
+                <div class="flex justify-between items-start mb-1">
+                  <span class="font-bold text-sm text-slate-800">IV Aktif D Vit</span>
+                  <svg class="w-5 h-5 text-blue-600 check-icon hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                </div>
+                <div class="text-xs text-slate-500 mb-2">Parikalsitol / Kalsitriol IV</div>
+                <div class="text-[10px] text-slate-400 italic">(Zemplar, Parical, Calcijex, Ostriol Ampul)</div>
+              </div>
+            </label>
+
+            <!-- Cinacalcet -->
+            <label class="cursor-pointer relative group">
+              <input type="checkbox" name="meds" value="cinacalcet" class="checkbox-wrapper absolute opacity-0 w-full h-full cursor-pointer">
+              <div class="p-3 border rounded-lg bg-white border-slate-300 hover:border-blue-400 transition flex flex-col h-full relative">
+                <div class="flex justify-between items-start mb-1">
+                  <span class="font-bold text-sm text-slate-800">Sinakalset</span>
+                  <svg class="w-5 h-5 text-blue-600 check-icon hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                </div>
+                <div class="text-xs text-slate-500 mb-2">Kalsimimetik</div>
+                <div class="text-[10px] text-slate-400 italic">(Mimpara, Cynacal, Viscap)</div>
+              </div>
+            </label>
+            
+             <!-- Nutrisyonel D Vit -->
+             <label class="cursor-pointer relative group">
+              <input type="checkbox" name="meds" value="nutritional_d" class="checkbox-wrapper absolute opacity-0 w-full h-full cursor-pointer">
+              <div class="p-3 border rounded-lg bg-white border-slate-300 hover:border-blue-400 transition flex flex-col h-full relative">
+                <div class="flex justify-between items-start mb-1">
+                  <span class="font-bold text-sm text-slate-800">Nutrisyonel D Vit</span>
+                  <svg class="w-5 h-5 text-blue-600 check-icon hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                </div>
+                <div class="text-xs text-slate-500 mb-2">Kolekalsiferol (Depo)</div>
+                <div class="text-[10px] text-slate-400 italic">(Devit-3, Coledan)</div>
+              </div>
+            </label>
+
+          </div>
+        </div>
+
+        <!-- 3. Laboratuvar Değerleri -->
+        <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+          <label class="block text-sm font-bold text-slate-800 mb-4 uppercase tracking-wide flex items-center">
+            <span class="bg-indigo-100 text-indigo-700 rounded-full w-6 h-6 flex items-center justify-center text-xs mr-2 font-bold">3</span>
+            Laboratuvar Değerleri
+          </label>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <!-- Kalsiyum -->
+            <div class="relative">
+              <label class="block text-xs font-bold text-slate-500 mb-1">Serum Kalsiyum (Ca)</label>
+              <div class="relative">
+                <input type="number" id="input-ca" step="0.1" placeholder="Örn: 8.5" class="w-full p-3 pl-4 pr-12 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition outline-none text-lg font-semibold text-slate-700" oninput="calculateCorrectedCa()">
+                <span class="absolute right-4 top-3.5 text-slate-400 text-sm font-medium">mg/dL</span>
+              </div>
+            </div>
+
+            <!-- Albumin -->
+            <div class="relative">
+              <label class="block text-xs font-bold text-slate-500 mb-1">Serum Albumin</label>
+              <div class="relative">
+                <input type="number" id="input-alb" step="0.1" placeholder="Örn: 3.8" class="w-full p-3 pl-4 pr-12 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition outline-none text-lg font-semibold text-slate-700" oninput="calculateCorrectedCa()">
+                <span class="absolute right-4 top-3.5 text-slate-400 text-sm font-medium">g/dL</span>
+              </div>
+            </div>
+
+            <!-- Otomatik Hesaplanan Düzeltilmiş Ca -->
+            <div class="md:col-span-2 bg-indigo-50 border border-indigo-100 rounded-lg p-3 flex items-center justify-between shadow-inner">
+              <div class="text-indigo-800 text-sm font-medium flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                Düzeltilmiş Kalsiyum:
+              </div>
+              <div class="text-2xl font-bold text-indigo-700" id="display-corrected-ca">--</div>
+            </div>
+
+            <!-- Fosfor -->
+            <div class="relative">
+              <label class="block text-xs font-bold text-slate-500 mb-1">Serum Fosfor (P)</label>
+              <div class="relative">
+                <input type="number" id="input-p" step="0.1" placeholder="Örn: 5.5" class="w-full p-3 pl-4 pr-12 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition outline-none text-lg font-semibold text-slate-700">
+                <span class="absolute right-4 top-3.5 text-slate-400 text-sm font-medium">mg/dL</span>
+              </div>
+            </div>
+
+            <!-- PTH -->
+            <div class="relative">
+              <label class="block text-xs font-bold text-slate-500 mb-1">Parathormon (PTH)</label>
+              <div class="relative">
+                <input type="number" id="input-pth" step="1" placeholder="Örn: 450" class="w-full p-3 pl-4 pr-12 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition outline-none text-lg font-semibold text-slate-700">
+                <span class="absolute right-4 top-3.5 text-slate-400 text-sm font-medium">pg/mL</span>
+              </div>
+            </div>
+
+          </div>
+          
+          <!-- Prediyaliz için özel checkbox -->
+          <div id="predialysis-options" class="hidden mt-4 pt-4 border-t border-slate-200">
+             <label class="flex items-center space-x-3 cursor-pointer">
+                <input type="checkbox" id="check-progressive" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 border-gray-300">
+                <span class="text-sm text-slate-700 font-medium">PTH değerinde progresif (sürekli) artış var mı?</span>
+             </label>
+          </div>
+
+        </div>
+
+        <button onclick="analyze()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-lg font-bold py-4 rounded-xl shadow-xl shadow-indigo-200 hover:shadow-2xl transition transform active:scale-[0.99] flex justify-center items-center">
+          <span>Tedavi Protokolünü Oluştur</span>
+          <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+        </button>
+
+      </div>
+
+      <!-- RESULT SECTION (Hidden by default) -->
+      <div id="result-section" class="hidden animate-fade-in pb-10">
+        
+        <!-- Result Header Navigation -->
+        <div class="flex justify-between items-center mb-6 border-b pb-4 border-slate-100">
+            <button onclick="backToEdit()" class="flex items-center text-sm font-bold text-slate-500 hover:text-indigo-600 transition bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-lg">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                Geri Dön (Düzenle)
+            </button>
+            <button onclick="resetForm()" class="flex items-center text-sm font-bold text-red-500 hover:text-red-700 transition bg-red-50 hover:bg-red-100 px-4 py-2 rounded-lg">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                En Başa Dön (Sıfırla)
+            </button>
+        </div>
+
+        <!-- Summary Bar -->
+        <div class="bg-slate-800 text-white p-4 rounded-xl mb-6 shadow-lg flex flex-wrap gap-4 items-center justify-between">
+          <div class="text-xs uppercase tracking-wider text-slate-400 font-bold">Hasta Profili</div>
+          <div class="flex flex-wrap gap-2 text-sm">
+            <span id="badge-type" class="px-3 py-1 rounded-full bg-slate-700 font-semibold border border-slate-600"></span>
+            <span id="badge-ca" class="px-3 py-1 rounded-full bg-slate-700 font-semibold border border-slate-600"></span>
+            <span id="badge-p" class="px-3 py-1 rounded-full bg-slate-700 font-semibold border border-slate-600"></span>
+            <span id="badge-pth" class="px-3 py-1 rounded-full bg-slate-700 font-semibold border border-slate-600"></span>
+          </div>
+        </div>
+
+        <!-- Current Meds Display -->
+        <div id="current-meds-display" class="mb-8"></div>
+
+        <div id="dynamic-content">
+          <!-- JS will inject content here -->
+        </div>
+
+        <!-- Footer Navigation -->
+        <div class="mt-8 pt-6 border-t border-slate-200 flex justify-center">
+            <button onclick="resetForm()" class="text-slate-400 hover:text-slate-600 text-sm font-medium">
+                Yeni Hasta Girişi
+            </button>
+        </div>
+
+      </div>
+
     </div>
   </div>
+
 <script>
-// KBH Algorithm Implementation in plain JavaScript
-const DRUGS = {
-  sevelamer: '(Sevaren, Renalamer, Lameris, Terolam)',
-  lanthanum: '(Antax)',
-  cinacalcet: '(Mimpara, Viscap, Cineset, Pimaro, Cynacal, Nefroset)',
-  kalsitriol_oral: '(Qalyviz, Rocaltrol)',
-  kalsitriol_iv: '(Cajex, Calcijex, Ostriol, Calderol, Caltriojex, Calcitron)',
-  parikalsitol: '(Parical)',
-  kalsiyumlu_binder: '(Ca-Asetat: Antifosfat Ca, Fix-at, Phos-no, Phos-out / Ca-Karbonat: Antifosfat CC)'
+// --- GLOBAL STATE ---
+let currentPatientType = 'dialysis'; 
+let calculatedCa = null;
+
+// --- DRUG INFO DATABASE (Turkey) ---
+const DRUG_INFO = {
+  ca_binder: {
+    name: "Kalsiyum Asetat / Karbonat",
+    brands: "Anti-fosfat, Phos-Ex, Fix-at",
+    dose: "Maks: Öğünlerle birlikte 3x2-3 tablet (Total elementel Ca < 1500mg)",
+    side_effects: "1. Hiperkalsemi<br>2. GİS İntoleransı (Gaz, Şişkinlik)",
+    type: "binder"
+  },
+  sevelamer: {
+    name: "Sevelamer Karbonat",
+    brands: "Renvela, Sevaren, Lameris",
+    dose: "Maks: Günde 3x3 tablet (2400-4800 mg)",
+    side_effects: "1. Bulantı / Kusma<br>2. Konstipasyon (Kabızlık)",
+    type: "binder"
+  },
+  lanthanum: {
+    name: "Lanthanum",
+    brands: "Antax, Fosrenol",
+    dose: "Maks: Günde 3000 mg (Çiğneme tableti)",
+    side_effects: "1. Bulantı<br>2. Karın Ağrısı",
+    type: "binder"
+  },
+  cinacalcet: {
+    name: "Sinakalset",
+    brands: "Mimpara, Cynacal, Viscap",
+    dose: "Maks: Günde 1 kez 180 mg",
+    side_effects: "1. Bulantı / Kusma<br>2. Hipokalsemi",
+    type: "pth"
+  },
+  iv_vit_d: {
+    name: "Parikalsitol / Kalsitriol (IV)",
+    brands: "Zemplar, Parical, Calcijex, Ostriol Ampul",
+    dose: "Doz: PTH düzeyine göre diyaliz sonunda (Örn: PTH/80)",
+    side_effects: "1. Hiperkalsemi<br>2. Fosfor Yüksekliği",
+    type: "pth"
+  },
+  oral_vit_d: {
+    name: "Kalsitriol (Oral)",
+    brands: "Rocaltrol, Qalyviz, Ostriol Kapsül",
+    dose: "Doz: Günde veya gün aşırı 0.25 - 0.5 mcg",
+    side_effects: "1. Hiperkalsemi<br>2. Fosfor Yüksekliği",
+    type: "pth"
+  },
+  nutritional_d: {
+    name: "Kolekalsiferol (Depo D Vit)",
+    brands: "Devit-3, Coledan",
+    dose: "Doz: Seviye < 30 ng/ml ise replasman",
+    side_effects: "1. Hiperkalsemi (Yüksek dozda)<br>2. Hiperkalsiüri",
+    type: "pth"
+  }
 };
 
-function getResult(patientType, phosphorus, calcium, pth) {
-  // Adinamik Risk for dialysis
-  if (patientType === 'dialysis' && pth === 'low_150') {
-    return {
-      code: 'SUT-DURDUR',
-      title: 'Adinamik Kemik / SUT Kesme Kriteri',
-      treatments: ['Mevcut tedaviyi geri çek', 'Izlem'],
-      forbidden: [
-        'Parikalsitol KESİLMELİ (PTH < 150)',
-        'Cinacalcet KESİLMELİ (PTH < 300)',
-        'Kalsitriol KESİLMELİ'
-      ],
-      sutNotes: [
-        'Parikalsitol: PTH < 150 ise kesilir.',
-        'Cinacalcet: PTH < 300 ise kesilir.'
-      ],
-      warnings: [],
-      goldenRule: 'PTH düşükse tedavi EKLENMEZ, GERİ ÇEKİLİR.'
-    };
+function getDrugCardHTML(key) {
+    const d = DRUG_INFO[key];
+    if(!d) return '';
+    return `
+    <div class="bg-white border border-slate-200 rounded-lg p-3 text-sm shadow-sm flex flex-col h-full">
+        <div class="font-bold text-indigo-700 mb-1">${d.name}</div>
+        <div class="text-xs text-slate-500 italic mb-2">(${d.brands})</div>
+        <div class="bg-slate-50 p-2 rounded mb-2 border border-slate-100">
+            <span class="text-[10px] font-bold text-slate-400 uppercase block">Doz/Sıklık</span>
+            <span class="text-xs font-semibold text-slate-700">${d.dose}</span>
+        </div>
+        <div class="mt-auto">
+            <span class="text-[10px] font-bold text-red-400 uppercase block">En Sık Yan Etkiler</span>
+            <span class="text-xs text-slate-600 leading-tight block">${d.side_effects}</span>
+        </div>
+    </div>`;
+}
+
+function setPatientType(type) {
+  currentPatientType = type;
+  const btnPre = document.getElementById('btn-pre');
+  const btnDia = document.getElementById('btn-dia');
+  const preOptions = document.getElementById('predialysis-options');
+
+  if (type === 'predialysis') {
+    btnPre.className = "p-4 border-2 rounded-xl text-center font-semibold transition-all duration-200 border-indigo-600 bg-indigo-50 text-indigo-700 shadow-sm";
+    btnDia.className = "p-4 border-2 rounded-xl text-center font-semibold transition-all duration-200 border-slate-200 text-slate-500 hover:bg-slate-50";
+    preOptions.classList.remove('hidden');
+  } else {
+    btnDia.className = "p-4 border-2 rounded-xl text-center font-semibold transition-all duration-200 border-indigo-600 bg-indigo-50 text-indigo-700 shadow-sm";
+    btnPre.className = "p-4 border-2 rounded-xl text-center font-semibold transition-all duration-200 border-slate-200 text-slate-500 hover:bg-slate-50";
+    preOptions.classList.add('hidden');
   }
-  // Predialysis cases
-  if (patientType === 'predialysis') {
-    if (phosphorus === 'normal' && calcium === 'normal') {
-      if (pth === 'progressive_high') {
-        return {
-          code: 'A1 - Progresif',
-          title: 'D Vitamini Eksikliği Yönetimi',
-          treatments: ['D vitamini eksikliğini düzelt (Kolekalsiferol)', 'Rutin aktif D vit hemen başlama'],
-          sutNotes: [],
-          forbidden: [],
-          warnings: ['PTH progresif yükseliyor'],
-          goldenRule: 'Önce depo D vitamini eksikliğini yerine koy.'
-        };
-      }
-      return {
-        code: 'A1',
-        title: 'Izlem ve Diyet',
-        treatments: ['Diyet eğitimi', 'Takip'],
-        sutNotes: [],
-        forbidden: [],
-        warnings: [],
-        goldenRule: 'Fizyolojik denge korunuyor, müdahale etme.'
-      };
+}
+
+function calculateCorrectedCa() {
+  const ca = parseFloat(document.getElementById('input-ca').value);
+  const alb = parseFloat(document.getElementById('input-alb').value);
+  const display = document.getElementById('display-corrected-ca');
+
+  if (!isNaN(ca) && !isNaN(alb)) {
+    let corrected = ca;
+    if (alb < 4.0) {
+        corrected = ca + 0.8 * (4.0 - alb);
     }
-    if (phosphorus === 'high' && calcium === 'normal') {
-      return {
-        code: 'A2',
-        title: 'Kalsiyum Içeren Binder',
-        treatments: ['Binder: Kalsiyum asetat ' + DRUGS.kalsiyumlu_binder],
-        sutNotes: ['Sevelamer başlangıcı için önce Ca-binder ile 3 ay başarısızlık gerekir.'],
-        forbidden: [],
-        warnings: ['Kalsiyum yükselirse Sevelamer\'e geçiş düşünülür'],
-        goldenRule: 'Evre 4-5 prediyalizde önce Fosfor ve Kalsiyum düzeltilir.'
-      };
-    }
-    if (phosphorus === 'high' && calcium === 'high') {
-      return {
-        code: 'A3',
-        title: 'Kalsiyumsuz Yaklaşım',
-        treatments: ['Binder: SEVELAMER ' + DRUGS.sevelamer],
-        sutNotes: ['Sevelamer: Başlangıç için diğer binderler ile 3 ay kullanım şartı aranır.'],
-        forbidden: ['Kalsiyumlu binder ' + DRUGS.kalsiyumlu_binder],
-        warnings: [],
-        goldenRule: 'Prediyalizde Lanthanum genelde tercih edilmez.'
-      };
-    }
-    // default predialysis
-    return {
-      code: 'A-Genel',
-      title: 'Bireyselleştirilmiş Tedavi',
-      treatments: ['Nefroloji konsültasyonu'],
-      sutNotes: [],
-      forbidden: [],
-      warnings: [],
-      goldenRule: ''
-    };
+    calculatedCa = corrected;
+    display.textContent = corrected.toFixed(2) + " mg/dL";
+    
+    if (corrected > 10.5) display.className = "text-2xl font-bold text-rose-600";
+    else if (corrected < 8.4) display.className = "text-2xl font-bold text-amber-600";
+    else display.className = "text-2xl font-bold text-emerald-600";
+    
+  } else {
+    calculatedCa = null;
+    display.textContent = "--";
+    display.className = "text-2xl font-bold text-slate-400";
   }
-  // Dialysis cases
+}
+
+function getCategoryFromValues(p, corrCa, pth, isPredialysis, isProgressivePTH) {
+  let catP = 'normal';
+  let catCa = 'normal';
+  let catPTH = 'normal';
+
+  // Fosfor
+  if (isPredialysis) {
+    if (p > 4.5) catP = 'high';
+    else catP = 'normal';
+  } else {
+    if (p > 6.0) catP = 'very_high';
+    else if (p > 4.5) catP = 'high';
+    else catP = 'normal';
+  }
+
+  // Kalsiyum
+  if (corrCa > 10.5) catCa = 'high';
+  else if (corrCa >= 10.2 && !isPredialysis) catCa = 'borderline';
+  else catCa = 'normal';
+
+  // PTH
+  if (isPredialysis) {
+    if (isProgressivePTH) catPTH = 'progressive_high';
+    else catPTH = 'normal';
+  } else {
+    if (pth < 150) catPTH = 'low_150';
+    else if (pth >= 150 && pth < 300) catPTH = 'target';
+    else if (pth >= 300 && pth < 600) catPTH = 'high_300_600';
+    else if (pth >= 600) catPTH = 'very_high_600';
+  }
+
+  return { catP, catCa, catPTH };
+}
+
+function analyze() {
+  const pVal = parseFloat(document.getElementById('input-p').value);
+  const pthVal = parseFloat(document.getElementById('input-pth').value);
+  const isProgressive = document.getElementById('check-progressive').checked;
+  
+  const medsCheckboxes = document.querySelectorAll('input[name="meds"]:checked');
+  const currentMeds = Array.from(medsCheckboxes).map(cb => cb.value);
+
+  if (calculatedCa === null || isNaN(pVal) || isNaN(pthVal)) {
+    alert("Lütfen Kalsiyum, Albumin, Fosfor ve PTH değerlerini eksiksiz giriniz.");
+    return;
+  }
+
+  const cats = getCategoryFromValues(pVal, calculatedCa, pthVal, currentPatientType === 'predialysis', isProgressive);
+  const result = getTreatmentResult(currentPatientType, cats.catP, cats.catCa, cats.catPTH, currentMeds);
+
+  renderResult(result, cats, pVal, calculatedCa, pthVal, currentMeds);
+  
+  document.getElementById('input-section').classList.add('hidden');
+  document.getElementById('result-section').classList.remove('hidden');
+  window.scrollTo(0,0);
+}
+
+function backToEdit() {
+    document.getElementById('result-section').classList.add('hidden');
+    document.getElementById('input-section').classList.remove('hidden');
+    window.scrollTo(0,0);
+}
+
+function resetForm() {
+    document.getElementById('input-ca').value = '';
+    document.getElementById('input-alb').value = '';
+    document.getElementById('input-p').value = '';
+    document.getElementById('input-pth').value = '';
+    document.getElementById('display-corrected-ca').textContent = '--';
+    document.querySelectorAll('input[name="meds"]').forEach(cb => cb.checked = false);
+    
+    backToEdit();
+}
+
+function renderResult(result, cats, valP, valCa, valPTH, currentMeds) {
+  const container = document.getElementById('dynamic-content');
+  const medsContainer = document.getElementById('current-meds-display');
+  
+  // Badge Updates
+  document.getElementById('badge-type').textContent = currentPatientType === 'predialysis' ? 'Prediyaliz' : 'Diyaliz';
+  
+  const bCa = document.getElementById('badge-ca');
+  bCa.textContent = `Düz. Ca: ${valCa.toFixed(2)}`;
+  bCa.className = cats.catCa === 'high' ? "px-3 py-1 rounded-full bg-rose-500 text-white font-semibold border-none" : "px-3 py-1 rounded-full bg-emerald-500 text-white font-semibold border-none";
+
+  const bP = document.getElementById('badge-p');
+  bP.textContent = `P: ${valP}`;
+  bP.className = (cats.catP === 'high' || cats.catP === 'very_high') ? "px-3 py-1 rounded-full bg-rose-500 text-white font-semibold border-none" : "px-3 py-1 rounded-full bg-emerald-500 text-white font-semibold border-none";
+
+  const bPTH = document.getElementById('badge-pth');
+  bPTH.textContent = `PTH: ${valPTH}`;
+  let pthColor = "bg-slate-500 text-white";
+  if (cats.catPTH === 'target') pthColor = "bg-emerald-500 text-white";
+  else if (cats.catPTH === 'low_150') pthColor = "bg-amber-500 text-white";
+  else if (cats.catPTH.includes('high')) pthColor = "bg-rose-500 text-white";
+  bPTH.className = `px-3 py-1 rounded-full font-semibold border-none ${pthColor}`;
+
+  // Render Current Meds
+  if (currentMeds.length > 0) {
+      medsContainer.innerHTML = `
+        <div class="mb-2 text-xs font-bold text-slate-500 uppercase">Kullanılan İlaçlar</div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+            ${currentMeds.map(key => getDrugCardHTML(key)).join('')}
+        </div>
+      `;
+  } else {
+      medsContainer.innerHTML = `<div class="p-3 bg-slate-100 rounded text-slate-500 text-sm italic">Hasta şu an herhangi bir ilaç kullanmıyor.</div>`;
+  }
+
+  // Main Content
+  let html = `
+    <div class="p-6 rounded-2xl border-2 ${result.borderColor || 'border-slate-200'} ${result.bgColor || 'bg-white'} shadow-sm">
+      <div class="text-xs font-bold uppercase tracking-wider mb-2 opacity-60">SUT Kodu: ${result.code || 'N/A'}</div>
+      <h3 class="text-2xl md:text-3xl font-bold mb-6 text-slate-800">${result.title}</h3>
+  `;
+
+  if (result.treatments && result.treatments.length) {
+    html += `
+      <div class="mb-6">
+        <h4 class="font-bold text-sm uppercase text-indigo-900 mb-3 flex items-center"><span class="w-2 h-2 bg-indigo-500 rounded-full mr-2"></span>Tedavi Planı & Değişiklikler</h4>
+        <ul class="space-y-3">
+          ${result.treatments.map(t => {
+            if(t.includes("KESİN") || t.includes("DURDURUN")) {
+                 return `<li class="flex items-start bg-rose-50 p-3 rounded-lg border border-rose-200 text-rose-800 shadow-sm font-bold"><svg class="w-5 h-5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg><span>${t}</span></li>`;
+            }
+            if(t.includes("BAŞLA") || t.includes("EKLE")) {
+                 return `<li class="flex items-start bg-emerald-50 p-3 rounded-lg border border-emerald-200 text-emerald-800 shadow-sm font-bold"><svg class="w-5 h-5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path></svg><span>${t}</span></li>`;
+            }
+            return `<li class="flex items-start bg-white p-3 rounded-lg border border-indigo-50 text-slate-700 shadow-sm"><span class="text-indigo-400 mr-2 font-bold">•</span><span>${t}</span></li>`;
+          }).join('')}
+        </ul>
+      </div>
+    `;
+  }
+
+  // Show Details of Recommended Drugs
+  if (result.recommendedDrugs && result.recommendedDrugs.length > 0) {
+      html += `
+        <div class="mb-6">
+            <h4 class="font-bold text-sm uppercase text-slate-500 mb-2">Önerilen İlaç Detayları</h4>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                ${result.recommendedDrugs.map(key => getDrugCardHTML(key)).join('')}
+            </div>
+        </div>
+      `;
+  }
+
+  if (result.sutNotes && result.sutNotes.length) {
+    html += `
+      <div class="bg-blue-50 p-5 rounded-xl border border-blue-100 mb-6">
+        <h4 class="font-bold text-sm uppercase text-blue-800 mb-2 flex items-center">SUT Ödeme Kuralı</h4>
+        <ul class="space-y-2 text-blue-900 text-sm">
+          ${result.sutNotes.map(n => `<li>• ${n}</li>`).join('')}
+        </ul>
+      </div>
+    `;
+  }
+
+  if (result.goldenRule) {
+    html += `
+      <div class="bg-slate-800 text-slate-50 rounded-xl p-5 shadow-lg border border-slate-700 relative overflow-hidden">
+        <div class="absolute top-0 right-0 -mt-2 -mr-2 w-16 h-16 bg-amber-500 rounded-full opacity-20"></div>
+        <h4 class="font-bold text-amber-400 text-xs uppercase mb-2">Klinik Altın Kural</h4>
+        <p class="text-sm md:text-base font-light italic leading-relaxed opacity-95">"${result.goldenRule}"</p>
+      </div>
+    `;
+  }
+
+  html += `</div>`;
+  container.innerHTML = html;
+}
+
+// --- ALGORITHM LOGIC ---
+function getTreatmentResult(patientType, phosphorus, calcium, pth, currentMeds) {
+  
+  const hasCaBinder = currentMeds.includes('ca_binder');
+  const hasSevelamer = currentMeds.includes('sevelamer');
+  const hasLanthanum = currentMeds.includes('lanthanum');
+  const hasOralVitD = currentMeds.includes('oral_vit_d');
+  const hasIVVitD = currentMeds.includes('iv_vit_d');
+  const hasCinacalcet = currentMeds.includes('cinacalcet');
+  const hasActiveVitD = hasOralVitD || hasIVVitD;
+
+  let recommendedDrugs = [];
+
+  // 1. DIALYSIS CASE
   if (patientType === 'dialysis') {
-    if (phosphorus === 'very_high') {
-      const forbidden = ['Sevelamer + Lanthanum KOMBİNASYONU YASAK',
-        'Parikalsitol ' + DRUGS.parikalsitol + ' (P > 6 olduğu için SUT ödemez)'
-      ];
+    
+    // Adinamik (PTH < 150)
+    if (pth === 'low_150') {
+      let treats = [];
+      if (hasActiveVitD) treats.push("KESİN: Mevcut Aktif D Vitamini (Parikalsitol/Kalsitriol) tedavisini durdurun.");
+      if (hasCinacalcet) treats.push("KESİN: Mevcut Sinakalset tedavisini durdurun.");
+      if (hasCaBinder) treats.push("AZALT/KES: Kalsiyum içeren bağlayıcı dozunu düşürün veya kesin.");
+      treats.push("Diyalizat kalsiyumunu düşürmeyi değerlendirin.");
+      
       return {
-        code: 'B4',
-        title: 'Dirençli Hiperfosfatemi',
-        treatments: [
-          '1. ADIM: Diyaliz Yeterliliğini Kontrol Et',
-          'Binder: Sevelamer ' + DRUGS.sevelamer + ' VEYA Lanthanum ' + DRUGS.lanthanum,
-          'PTH Yüksekse: Cinacalcet ' + DRUGS.cinacalcet + ' (Eğer PTH ≥ 600 ise)'
-        ],
-        forbidden: forbidden,
-        sutNotes: [
-          'Kombinasyon: Sevelamer ve Lanthanum birlikte ödenmez!',
-          'Parikalsitol: P > 6 mg/dL ise tedavi sonlandırılır.',
-          'Cinacalcet: Başlangıç için PTH ≥ 600 ve Ca ≥ 8.5 şaltı aranır.',
-          'Binder: 3 ay diğer ilaç kullanım öyküsü raporlanmalıdır.'
-        ],
-        warnings: ['P > 6.0 mg/dL (Parikalsitol kontrendike)'],
-        goldenRule: 'Hiperfosfatemi tedavisi ilaçtan değil, diyalizden başlar.'
+        code: 'SUT-DURDUR',
+        title: 'Adinamik Kemik / Aşırı Baskılanmış PTH',
+        treatments: treats.length > 0 ? treats : ['Mevcut baskılayıcı tedavileri kesin.', 'İzlem.'],
+        sutNotes: ['Parikalsitol: PTH < 150 ise kesilir.', 'Cinacalcet: PTH < 300 ise kesilir.'],
+        goldenRule: 'PTH < 150 iken tedavi verilmez. Adinamik kemik hastalığı riski.',
+        borderColor: 'border-amber-200',
+        bgColor: 'bg-amber-50',
+        recommendedDrugs: []
       };
     }
-    if (phosphorus === 'high' && calcium === 'normal') {
-      let pthTreatment = '';
-      let sutWarning = [];
-      if (pth === 'very_high_600') {
-        pthTreatment = 'PTH ≥ 600: Cinacalcet ' + DRUGS.cinacalcet + ' başlanabilir (SUT Uygun)';
-        sutWarning.push('Cinacalcet Başlangıç: Ca ≥ 8.5 ve PTH ≥ 600 şaltı sağlandı.');
-      } else if (pth === 'high_300_600') {
-        pthTreatment = 'PTH 300-600: Oral/IV Vit D düşünülebilir. (Cinacalcet SUT başlangıç kriterini sağlamıyor)';
-        sutWarning.push('Cinacalcet: PTH < 600 olduğu için başlangıç yapılamaz.');
+
+    // P > 6.0 (Dirençli)
+    if (phosphorus === 'very_high') {
+      let treats = ['1. ADIM: Diyet uyumu ve diyaliz etkinliğini sorgulayın.'];
+      
+      if (hasActiveVitD) treats.unshift("KESİN: Fosfor > 6.0 mg/dL olduğu için Aktif D Vitamini kesilmelidir.");
+      
+      if (!hasSevelamer && !hasLanthanum) {
+          treats.push("BAŞLA: Sevelamer veya Lanthanum ekleyin.");
+          recommendedDrugs.push('sevelamer');
+      } else {
+          treats.push("DEVAM/ARTIR: Mevcut Kalsiyumsuz Binder (Sevelamer/Lanthanum) dozunu artırın.");
+          if(hasSevelamer) recommendedDrugs.push('sevelamer');
+          if(hasLanthanum) recommendedDrugs.push('lanthanum');
       }
-      const treatments = ['Binder: Kalsiyum içeren ' + DRUGS.kalsiyumlu_binder];
-      if (pthTreatment) treatments.push(pthTreatment);
+
+      if (pth === 'very_high_600') {
+         treats.push("BAŞLA/DEVAM: Sinakalset (P yükseltmez, güvenli).");
+         recommendedDrugs.push('cinacalcet');
+      }
+
       return {
+        code: 'B4 - Dirençli P',
+        title: 'Dirençli Hiperfosfatemi',
+        treatments: treats,
+        sutNotes: ['Sevelamer/Lanthanum için: 3 ay diğer ilaç kullanım öyküsü gerekir.'],
+        goldenRule: 'Fosfor > 6.0 mg/dL iken D vitamini verilmez.',
+        borderColor: 'border-rose-200',
+        bgColor: 'bg-white',
+        recommendedDrugs: recommendedDrugs
+      };
+    }
+
+    // Ca > 10.5 (Hiperkalsemi)
+    if (calcium === 'high') {
+      let treats = [];
+      
+      if (hasCaBinder) treats.unshift("KESİN: Kalsiyum içeren bağlayıcıları (Ca-Asetat) kesin.");
+      if (hasActiveVitD) treats.unshift("KESİN: Aktif D Vitaminini kesin.");
+      
+      if (!hasSevelamer) {
+          treats.push("BAŞLA: Kalsiyumsuz bağlayıcı (Sevelamer).");
+          recommendedDrugs.push('sevelamer');
+      } else {
+          treats.push("DEVAM: Sevelamer tedavisine devam edin.");
+          recommendedDrugs.push('sevelamer');
+      }
+      
+      if (pth === 'very_high_600') {
+          treats.push("BAŞLA/DEVAM: Sinakalset (Ca düşürür, ideal tercih).");
+          recommendedDrugs.push('cinacalcet');
+      }
+
+      return {
+        code: 'B3 - Hiperkalsemi',
+        title: 'Hiperkalsemi Yönetimi',
+        treatments: treats,
+        sutNotes: ['Parikalsitol: Ca > 10.5 ise kesilir.', 'Cinacalcet: Ca > 8.5 olduğu için başlanabilir.'],
+        goldenRule: 'Hiperkalsemi acil durumdur. Tüm kalsiyum yükünü kesin.',
+        borderColor: 'border-rose-200',
+        bgColor: 'bg-white',
+        recommendedDrugs: recommendedDrugs
+      };
+    }
+
+    // Ca Normal, P Yüksek
+    if (phosphorus === 'high') {
+        let treats = [];
+        if (hasCaBinder && calcium === 'borderline') {
+            treats.push("DEĞİŞTİR: Ca sınırda olduğu için Sevelamer'e geçiş düşünün.");
+            recommendedDrugs.push('sevelamer');
+        } else if (!hasSevelamer && !hasCaBinder) {
+            treats.push("BAŞLA: Sevelamer (İlk tercih)");
+            recommendedDrugs.push('sevelamer');
+        } else if (hasSevelamer) {
+            treats.push("DEVAM: Sevelamer dozunu optimize edin.");
+            recommendedDrugs.push('sevelamer');
+        } else if (hasCaBinder) {
+            treats.push("DEVAM: Kalsiyum Asetat dozunu artırın (Ca < 10.2 ise).");
+            recommendedDrugs.push('ca_binder');
+        }
+        
+        if (pth === 'very_high_600') {
+            treats.push("EKLE: Sinakalset veya Parikalsitol.");
+            recommendedDrugs.push('cinacalcet');
+        }
+        else if (pth === 'high_300_600') {
+            treats.push("EKLE: Parikalsitol (IV tercih edilir).");
+            recommendedDrugs.push('iv_vit_d');
+        }
+        
+        return {
+            code: 'B2',
+            title: 'Sevelamer Ağırlıklı Tedavi',
+            treatments: treats,
+            sutNotes: ['Sevelamer için 3 ay Ca-asetat kullanımı gerekir.'],
+            goldenRule: 'Sevelamer vasküler kalsifikasyonu azaltır.',
+            borderColor: 'border-indigo-200',
+            bgColor: 'bg-white',
+            recommendedDrugs: recommendedDrugs
+        };
+    }
+
+    // Ca Normal, P Normal
+    if (phosphorus === 'normal') {
+        if (pth === 'target') {
+            return {
+                code: 'HEDEF',
+                title: 'Hedef Değerlerde',
+                treatments: ['Mevcut tedaviye aynen DEVAM EDİN.', '3 ayda bir kontrol.'],
+                goldenRule: 'Stabil hastada ilacı değiştirme.',
+                borderColor: 'border-emerald-200',
+                bgColor: 'bg-emerald-50',
+                recommendedDrugs: []
+            };
+        }
+        if (pth === 'high_300_600' || pth === 'very_high_600') {
+             let treats = ['Fosfor diyeti devam.'];
+             if (pth === 'very_high_600') {
+                 if(!hasCinacalcet) { treats.push("BAŞLA: Sinakalset (PTH ≥ 600)"); recommendedDrugs.push('cinacalcet'); }
+                 else { treats.push("DEVAM: Sinakalset dozunu titret edin."); recommendedDrugs.push('cinacalcet'); }
+             }
+             if (!hasActiveVitD && !hasCinacalcet) {
+                 treats.push("VEYA BAŞLA: Parikalsitol (IV).");
+                 recommendedDrugs.push('iv_vit_d');
+             }
+             
+            return {
+                code: 'İzole SHPT',
+                title: 'Sekonder Hiperparatiroidi Tedavisi',
+                treatments: treats,
+                sutNotes: ['Cinacalcet için PTH ≥ 600 şartı vardır.'],
+                goldenRule: 'Fosfor normalken PTH yükseliyorsa, D vitamini veya Kalsimimetik dozu yetersizdir.',
+                borderColor: 'border-indigo-200',
+                bgColor: 'bg-white',
+                recommendedDrugs: recommendedDrugs
+            };
+        }
+    }
+    
+    // Default Fallback
+    return {
         code: 'B1',
         title: 'Standart Tedavi',
-        treatments: treatments,
-        forbidden: [],
-        sutNotes: sutWarning,
-        warnings: ['P > 6 mg/dL olursa Parikalsitol kesilmelidir'],
-        goldenRule: 'Kalsiyum bazlı binderler ucuzdur ama kalsifikasyon riski taşır.'
-      };
-    }
-    if (phosphorus === 'high') {
-      const treatments = ['Binder: SEVELAMER ' + DRUGS.sevelamer];
-      const sutNotes = ['Sevelamer: Başlangıç için 3 ay diğer binder kullanımı şalt.'];
-      const forbidden = [];
-      let code = '';
-      let title = '';
-      let goldenRule = '';
-      if (calcium === 'high') {
-        forbidden.push('Kalsiyumlu binder ' + DRUGS.kalsiyumlu_binder);
-        forbidden.push('Parikalsitol ' + DRUGS.parikalsitol + ' (Ca > 10.5 ise SUT ödemez)');
-        sutNotes.push('Parikalsitol: Ca > 10.5 ise kesilir.');
-        if (pth === 'very_high_600') {
-          treatments.push('PTH: CİNACALCET ' + DRUGS.cinacalcet + ' (SUT Uygun: Ca > 8.5, PTH ≥ 600)');
-        } else {
-          treatments.push('PTH < 600: Cinacalcet başlangıcı SUT dışı.');
-        }
-        code = 'B3';
-        title = 'Kalsiyumsuz & Kalsimimetik';
-        goldenRule = 'Ca yüksek + P yüksek = Kalsiyumlu binder ASLA.';
-      } else {
-        if (pth === 'very_high_600') {
-          treatments.push('PTH: CİNACALCET ' + DRUGS.cinacalcet);
-          treatments.push('VEYA Parikalsitol (Ca < 10.5 ise)');
-        } else if (pth === 'high_300_600') {
-          treatments.push('PTH: Parikalsitol ' + DRUGS.parikalsitol + ' (Ca ve P sınırları uygunsa)');
-        }
-        code = 'B2';
-        title = 'Sevelamer Ağırlıklı Tedavi';
-        goldenRule = 'Sevelamer lipid profilini de olumlu etkiler.';
-      }
+        treatments: [
+            hasCaBinder ? 'DEVAM: Kalsiyum Asetat tedavisine devam edin.' : 'BAŞLA: Kalsiyum Asetat (3x1 ile başla).',
+            'PTH takibi yapın.'
+        ],
+        sutNotes: ['İlk basamak tedavi Kalsiyum Asetat\'tır.'],
+        goldenRule: 'Ekonomik ve etkili başlangıç.',
+        borderColor: 'border-slate-200',
+        bgColor: 'bg-white',
+        recommendedDrugs: ['ca_binder']
+    };
+
+  } 
+  
+  // 2. PREDIALYSIS CASE
+  else {
+    if (phosphorus === 'normal' && calcium === 'normal' && pth === 'progressive_high') {
       return {
-        code: code,
-        title: title,
-        treatments: treatments,
-        forbidden: forbidden,
-        sutNotes: sutNotes,
-        warnings: [],
-        goldenRule: goldenRule
+        code: 'A1 - Erken Evre',
+        title: 'D Vitamini Eksikliği Yönetimi',
+        treatments: [
+            '25-OH D vit düzeyine bakın.',
+            'Eksikse: Kolekalsiferol (Devit-3) replasmanı yapın.',
+            hasActiveVitD ? 'UYARI: Prediyalizde rutin aktif D vit (Rocaltrol) önerilmez, kesmeyi değerlendirin.' : 'Aktif D vit hemen başlamayın.'
+        ],
+        goldenRule: 'Prediyalizde önce depo D vitamini eksikliğini yerine koyun.',
+        borderColor: 'border-emerald-200',
+        bgColor: 'bg-white',
+        recommendedDrugs: ['nutritional_d']
       };
     }
-  }
-  // default fallback
-  return { code: '', title: 'Veri Eksik', treatments: [], forbidden: [], sutNotes: [], warnings: [], goldenRule: ''};
-}
 
-// UI logic
-let step = 1;
-let patientType = null;
-let phosphorus = null;
-let calcium = null;
-let pth = null;
+    if (phosphorus === 'high' && calcium === 'high') {
+       let treats = [];
+       if (hasCaBinder) treats.unshift("KESİN: Kalsiyumlu bağlayıcıları kesin.");
+       treats.push("BAŞLA: Sevelamer.");
+       recommendedDrugs.push('sevelamer');
 
-function render() {
-  const container = document.getElementById('content');
-  container.innerHTML = '';
-  // progress bar
-  const progress = document.createElement('div');
-  progress.className = 'flex gap-2 mb-8 px-1';
-  for (let i = 1; i <= 5; i++) {
-    const bar = document.createElement('div');
-    bar.className = 'h-1.5 flex-1 rounded-full transition-all';
-    bar.style.backgroundColor = i <= step ? '#4f46e5' : '#e2e8f0';
-    progress.appendChild(bar);
-  }
-  container.appendChild(progress);
-  if (step === 1) {
-    const title = document.createElement('h2');
-    title.className = 'text-xl font-semibold text-slate-800 mb-4';
-    title.textContent = 'Hasta Grubu';
-    container.appendChild(title);
-    const grid = document.createElement('div');
-    grid.className = 'grid md:grid-cols-2 gap-4';
-    const btn1 = document.createElement('button');
-    btn1.className = 'p-6 border-2 border-slate-100 rounded-xl hover:border-indigo-500 hover:bg-indigo-50 transition text-left';
-    btn1.innerHTML = '<div class="font-bold text-lg text-slate-700">Evre 4-5 (Prediyaliz)</div><div class="text-sm text-slate-500 mt-2">Diyalize girmeyen, GFR düşük.</div>';
-    btn1.onclick = () => { patientType = 'predialysis'; step = 2; render(); };
-    const btn2 = document.createElement('button');
-    btn2.className = 'p-6 border-2 border-slate-100 rounded-xl hover:border-indigo-500 hover:bg-indigo-50 transition text-left';
-    btn2.innerHTML = '<div class="font-bold text-lg text-slate-700">Diyaliz (HD / PD)</div><div class="text-sm text-slate-500 mt-2">Hemodiyaliz veya Periton diyalizi.</div>';
-    btn2.onclick = () => { patientType = 'dialysis'; step = 2; render(); };
-    grid.appendChild(btn1);
-    grid.appendChild(btn2);
-    container.appendChild(grid);
-  } else if (step === 2) {
-    const title = document.createElement('h2');
-    title.className = 'text-xl font-semibold text-slate-800 mb-4';
-    title.textContent = 'Fosfor Düzeyi';
-    container.appendChild(title);
-    const grid = document.createElement('div');
-    grid.className = 'grid gap-3';
-    if (patientType === 'predialysis') {
-      const b = document.createElement('button');
-      b.className = 'p-4 border border-slate-200 rounded-lg hover:bg-emerald-50 hover:border-emerald-500 hover:text-emerald-700 text-left';
-      b.textContent = 'Normal (≤ 4.5 mg/dL)';
-      b.onclick = () => { phosphorus = 'normal'; step = 3; render(); };
-      grid.appendChild(b);
+       return {
+        code: 'A3',
+        title: 'Kalsiyumsuz Yaklaşım (Prediyaliz)',
+        treatments: treats,
+        sutNotes: ['Prediyalizde Sevelamer ödemesi için Rapor gerekir.'],
+        goldenRule: 'Prediyalizde hiperkalsemiden şiddetle kaçının.',
+        borderColor: 'border-rose-200',
+        bgColor: 'bg-white',
+        recommendedDrugs: recommendedDrugs
+      };
     }
-    const b2 = document.createElement('button');
-    b2.className = 'p-4 border border-slate-200 rounded-lg hover:bg-amber-50 hover:border-amber-500 hover:text-amber-700 text-left';
-    b2.textContent = 'Yüksek' + (patientType === 'predialysis' ? ' (> 4.5)' : '');
-    b2.onclick = () => { phosphorus = 'high'; step = 3; render(); };
-    grid.appendChild(b2);
-    if (patientType === 'dialysis') {
-      const b3 = document.createElement('button');
-      b3.className = 'p-4 border border-slate-200 rounded-lg hover:bg-purple-50 hover:border-purple-500 hover:text-purple-700 flex justify-between items-center text-left';
-      b3.innerHTML = '<span class="font-semibold">Çok Yüksek (> 6 mg/dL)</span><span class="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">Parikalsitol Kontrendike</span>';
-      b3.onclick = () => { phosphorus = 'very_high'; step = 3; render(); };
-      grid.appendChild(b3);
-    }
-    container.appendChild(grid);
-    const backBtn = document.createElement('button');
-    backBtn.className = 'text-sm text-slate-400 hover:text-slate-600 mt-4 underline';
-    backBtn.textContent = 'Geri Dön';
-    backBtn.onclick = () => { step = 1; render(); };
-    container.appendChild(backBtn);
-  } else if (step === 3) {
-    const title = document.createElement('h2');
-    title.className = 'text-xl font-semibold text-slate-800 mb-4';
-    title.textContent = 'Düzeltilmiş Kalsiyum';
-    container.appendChild(title);
-    const grid = document.createElement('div');
-    grid.className = 'grid gap-3';
-    const bn = document.createElement('button');
-    bn.className = 'p-4 border border-slate-200 rounded-lg hover:bg-blue-50 hover:border-blue-500 hover:text-blue-700 text-left';
-    bn.textContent = 'Düşük veya Normal (≤ 10.2)';
-    bn.onclick = () => { calcium = 'normal'; step = 4; render(); };
-    grid.appendChild(bn);
-    if (patientType === 'dialysis') {
-      const bb = document.createElement('button');
-      bb.className = 'p-4 border border-slate-200 rounded-lg hover:bg-amber-50 hover:border-amber-500 hover:text-amber-700 text-left';
-      bb.textContent = 'Sınırda (≈ 10.0 – 10.2)';
-      bb.onclick = () => { calcium = 'borderline'; step = 4; render(); };
-      grid.appendChild(bb);
-    }
-    const bh = document.createElement('button');
-    bh.className = 'p-4 border border-slate-200 rounded-lg hover:bg-rose-50 hover:border-rose-500 hover:text-rose-700 text-left flex justify-between items-center';
-    bh.innerHTML = '<span>Yüksek (> 10.5)</span><span class="text-xs bg-rose-100 text-rose-700 px-2 py-1 rounded">SUT Uyarısı</span>';
-    bh.onclick = () => { calcium = 'high'; step = 4; render(); };
-    grid.appendChild(bh);
-    container.appendChild(grid);
-    const backBtn = document.createElement('button');
-    backBtn.className = 'text-sm text-slate-400 hover:text-slate-600 mt-4 underline';
-    backBtn.textContent = 'Geri Dön';
-    backBtn.onclick = () => { step = 2; render(); };
-    container.appendChild(backBtn);
-  } else if (step === 4) {
-    const title = document.createElement('h2');
-    title.className = 'text-xl font-semibold text-slate-800 mb-4';
-    title.textContent = 'PTH (Parathormon)';
-    container.appendChild(title);
-    const note = document.createElement('div');
-    note.className = 'bg-blue-50 text-blue-800 p-3 rounded-md text-sm mb-4 border border-blue-100';
-    note.textContent = 'Klinik Not: Önce Fosfor ve Kalsiyum, sonra PTH yönetilir.';
-    container.appendChild(note);
-    const grid = document.createElement('div');
-    grid.className = 'grid gap-3';
-    if (patientType === 'dialysis') {
-      const p1 = document.createElement('button');
-      p1.className = 'p-4 border border-slate-200 rounded-lg hover:bg-slate-100 hover:border-slate-400 text-left';
-      p1.textContent = '< 150 (SUT Kesme Sınırı)';
-      p1.onclick = () => { pth = 'low_150'; step = 5; render(); };
-      const p2 = document.createElement('button');
-      p2.className = 'p-4 border border-slate-200 rounded-lg hover:bg-emerald-50 hover:border-emerald-500 text-left';
-      p2.textContent = '150 – 300 (Hedef)';
-      p2.onclick = () => { pth = 'target'; step = 5; render(); };
-      const p3 = document.createElement('button');
-      p3.className = 'p-4 border border-slate-200 rounded-lg hover:bg-amber-50 hover:border-amber-500 text-left';
-      p3.textContent = '300 – 600 (Yüksek)';
-      p3.onclick = () => { pth = 'high_300_600'; step = 5; render(); };
-      const p4 = document.createElement('button');
-      p4.className = 'p-4 border border-slate-200 rounded-lg hover:bg-rose-50 hover;border-rose-500 text-left';
-      p4.textContent = '≥ 600 (Cinacalcet Sınırı)';
-      p4.onclick = () => { pth = 'very_high_600'; step = 5; render(); };
-      grid.appendChild(p1);
-      grid.appendChild(p2);
-      grid.appendChild(p3);
-      grid.appendChild(p4);
-    } else {
-      const p1 = document.createElement('button');
-      p1.className = 'p-4 border border-slate-200 rounded-lg hover:bg-emerald-50 hover:border-emerald-500 text-left';
-      p1.textContent = 'Normal / Hafif Yüksek';
-      p1.onclick = () => { pth = 'normal'; step = 5; render(); };
-      const p2 = document.createElement('button');
-      p2.className = 'p-4 border border-slate-200 rounded-lg hover:bg-amber-50 hover:border-amber-500 text-left';
-      p2.textContent = 'Progresif Yüksek';
-      p2.onclick = () => { pth = 'progressive_high'; step = 5; render(); };
-      grid.appendChild(p1);
-      grid.appendChild(p2);
-    }
-    container.appendChild(grid);
-    const backBtn = document.createElement('button');
-    backBtn.className = 'text-sm text-slate-400 hover:text-slate-600 mt-4 underline';
-    backBtn.textContent = 'Geri Dön';
-    backBtn.onclick = () => { step = 3; render(); };
-    container.appendChild(backBtn);
-  } else if (step === 5) {
-    const result = getResult(patientType, phosphorus, calcium, pth);
-    const card = document.createElement('div');
-    card.className = 'p-6 rounded-xl border-2 mb-6 bg-slate-100';
-    const header = document.createElement('div');
-    header.className = 'text-xs font-bold uppercase tracking-wider mb-1';
-    header.textContent = 'Algoritma Kodu: ' + result.code;
-    const title = document.createElement('h3');
-    title.className = 'text-2xl font-bold mb-4';
-    title.textContent = result.title;
-    card.appendChild(header);
-    card.appendChild(title);
-    if (result.treatments && result.treatments.length) {
-      const tDiv = document.createElement('div');
-      tDiv.className = 'mb-4';
-      const tHeader = document.createElement('h4');
-      tHeader.className = 'font-semibold text-sm uppercase opacity-70 mb-3';
-      tHeader.textContent = 'Önerilen Tedavi';
-      tDiv.appendChild(tHeader);
-      const ul = document.createElement('ul');
-      ul.className = 'space-y-2';
-      result.treatments.forEach(item => {
-        const li = document.createElement('li');
-        li.className = 'flex items-start gap-2';
-        li.innerHTML = '<span>•</span><span>' + item + '</span>';
-        ul.appendChild(li);
-      });
-      tDiv.appendChild(ul);
-      card.appendChild(tDiv);
-    }
-    if (result.sutNotes && result.sutNotes.length) {
-      const sDiv = document.createElement('div');
-      sDiv.className = 'bg-blue-50 p-4 rounded-lg border border-blue-100 mb-4';
-      const sHeader = document.createElement('h4');
-      sHeader.className = 'font-bold text-sm uppercase text-blue-800 mb-2';
-      sHeader.textContent = 'SUT Ödeme Kuralı';
-      sDiv.appendChild(sHeader);
-      const ul = document.createElement('ul');
-      ul.className = 'space-y-1';
-      result.sutNotes.forEach(item => {
-        const li = document.createElement('li');
-        li.className = 'text-blue-900 text-sm flex items-start gap-2';
-        li.innerHTML = '<span class="text-blue-500">•</span>' + item;
-        ul.appendChild(li);
-      });
-      sDiv.appendChild(ul);
-      card.appendChild(sDiv);
-    }
-    if (result.forbidden && result.forbidden.length) {
-      const fDiv = document.createElement('div');
-      fDiv.className = 'bg-red-50 p-4 rounded-lg border border-red-100 mb-4';
-      const fHeader = document.createElement('h4');
-      fHeader.className = 'font-semibold text-sm uppercase text-red-700 mb-2';
-      fHeader.textContent = 'Yasaklar';
-      fDiv.appendChild(fHeader);
-      const ul = document.createElement('ul');
-      ul.className = 'space-y-1';
-      result.forbidden.forEach(item => {
-        const li = document.createElement('li');
-        li.className = 'text-red-800 text-sm flex items-start gap-2';
-        li.innerHTML = '<span class="text-red-500 font-bold">×</span>' + item;
-        ul.appendChild(li);
-      });
-      fDiv.appendChild(ul);
-      card.appendChild(fDiv);
-    }
-    if (result.warnings && result.warnings.length) {
-      const wDiv = document.createElement('div');
-      wDiv.className = 'bg-yellow-50 p-4 rounded-lg border border-yellow-100 mb-4';
-      const wHeader = document.createElement('h4');
-      wHeader.className = 'font-semibold text-sm uppercase text-yellow-700 mb-2';
-      wHeader.textContent = 'Uyarılar';
-      wDiv.appendChild(wHeader);
-      const ul = document.createElement('ul');
-      ul.className = 'space-y-1';
-      result.warnings.forEach(item => {
-        const li = document.createElement('li');
-        li.className = 'text-yellow-800 text-sm flex items-start gap-2';
-        li.innerHTML = '<span class="text-yellow-500 font-bold">!</span>' + item;
-        ul.appendChild(li);
-      });
-      wDiv.appendChild(ul);
-      card.appendChild(wDiv);
-    }
-    if (result.goldenRule) {
-      const gDiv = document.createElement('div');
-      gDiv.className = 'bg-slate-800 text-slate-50 rounded-lg p-5 shadow-lg border border-slate-700 mb-4';
-      const gHeader = document.createElement('h4');
-      gHeader.className = 'font-bold text-amber-400 text-xs uppercase mb-1';
-      gHeader.textContent = 'Klinik Altın Kural';
-      gDiv.appendChild(gHeader);
-      const gP = document.createElement('p');
-      gP.className = 'text-sm md:text-base font-light italic opacity-95';
-      gP.textContent = '"' + result.goldenRule + '"';
-      gDiv.appendChild(gP);
-      card.appendChild(gDiv);
-    }
-    container.appendChild(card);
-    const btnReset = document.createElement('button');
-    btnReset.className = 'px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-full shadow-lg mt-4';
-    btnReset.textContent = 'Yeni Hasta';
-    btnReset.onclick = () => { step = 1; patientType = phosphorus = calcium = pth = null; render(); };
-    container.appendChild(btnReset);
+    
+    return {
+        code: 'A2',
+        title: 'Standart Yaklaşım',
+        treatments: ['BAŞLA/DEVAM: Kalsiyum Asetat (Öğünle birlikte).'],
+        sutNotes: ['Önce Kalsiyum asetat denenmelidir.'],
+        goldenRule: 'Fosfor kontrolü GFR kaybını yavaşlatabilir.',
+        borderColor: 'border-indigo-200',
+        bgColor: 'bg-white',
+        recommendedDrugs: ['ca_binder']
+    };
   }
 }
-render();
 </script>
 </body>
 </html>
