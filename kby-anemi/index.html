@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KBY'de Anemi Tedavisi</title>
+  <title>KBY'de Anemi Tedavisi Hesaplayıcı</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,6 +18,12 @@
     .animate-fade-in {
       animation: fadeIn 0.4s ease-out forwards;
     }
+    /* Input focus ring custom color */
+    .input-focus:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+    }
   </style>
 </head>
 <body class="bg-gray-100 p-4 flex items-center justify-center min-h-screen">
@@ -30,78 +36,263 @@
   <script type="text/babel">
     const { useState, useEffect } = React;
 
-    // Step 1 component
-    const Step1 = ({ setStep }) => (
-      <div className="space-y-4 animate-fade-in">
-        <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-600">
-          <h3 className="font-bold text-lg text-blue-900 flex items-center gap-2">
-            <span data-lucide="activity" className="w-5 h-5"></span> ADIM 1: Anemi Varlığı
-          </h3>
-          <p className="mt-2 text-blue-800">
-            <strong>Hb &lt; 11 – 11.5 g/dL</strong> ise değerlendirmeye başla.
-          </p>
-          <div className="mt-3 text-sm text-blue-700 bg-white p-3 rounded shadow-sm">
-            <strong>Mutlaka İste:</strong> Ferritin, TSAT<br/>
-            <span className="opacity-75">(Gerekirse: CRP, B12, Folat)</span>
-          </div>
-        </div>
-        <button 
-          onClick={() => setStep(2)}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-all shadow-md"
-        >
-          Demir Durumunu Sınıfla <span data-lucide="chevron-right" className="w-5 h-5"></span>
-        </button>
-      </div>
-    );
+    // Step 1: Patient Data Entry & Calculator
+    const Step1 = ({ setStep, setPatientData }) => {
+      const [hb, setHb] = useState('');
+      const [ferritin, setFerritin] = useState('');
+      
+      // TSAT Calculation State
+      const [tsatMode, setTsatMode] = useState('direct'); // 'direct' or 'calc'
+      const [tsatInput, setTsatInput] = useState('');
+      const [serumIron, setSerumIron] = useState('');
+      const [tibc, setTibc] = useState('');
+      const [calculatedTsat, setCalculatedTsat] = useState(null);
 
-    // Step 2 component
-    const Step2 = ({ setStep, setIronStatus }) => (
-      <div className="space-y-4 animate-fade-in">
-        <h3 className="font-bold text-lg text-gray-800 border-b pb-2">ADIM 2: Demir Durumu</h3>
-        <div className="bg-yellow-50 p-3 text-sm text-yellow-900 border-l-4 border-yellow-500 rounded mb-2 shadow-sm">
-          <strong className="block mb-1">📋 SUT Kuralı (IV Demir):</strong>
-          Evre III, IV, V KBH hastalarında; <br/>
-          <strong>TSAT &lt; %20</strong> ve/veya <strong>Ferritin &lt; 100 µg/L</strong> ise IV demir tedavisi karşılanır.
-        </div>
-        <button 
-          onClick={() => { setIronStatus('deficient'); setStep(3); }}
-          className="w-full text-left p-4 rounded-lg border-2 border-red-100 bg-red-50 hover:bg-red-100 hover:border-red-300 transition-all group"
-        >
-          <div className="flex items-center gap-2 font-bold text-red-700 mb-1">
-            <div className="w-3 h-3 rounded-full bg-red-600"></div> Demir Eksikliği Mevcut
-          </div>
-          <div className="text-sm text-gray-600 pl-5">
-            TSAT &lt; %20 <strong>ve/veya</strong> Ferritin &lt; 100 µg/L
-          </div>
-          <div className="mt-2 pl-5 text-red-600 font-semibold text-sm group-hover:translate-x-1 transition-transform">
-            👉 IV Demir Tedavisi Başla
-          </div>
-        </button>
-        <button 
-          onClick={() => { setIronStatus('replete'); setStep(5); }}
-          className="w-full text-left p-4 rounded-lg border-2 border-green-100 bg-green-50 hover:bg-green-100 hover:border-green-300 transition-all group"
-        >
-          <div className="flex items-center gap-2 font-bold text-green-700 mb-1">
-            <div className="w-3 h-3 rounded-full bg-green-600"></div> Demir Yeterli
-          </div>
-          <div className="text-sm text-gray-600 pl-5">
-            TSAT ≥ %20 <strong>ve</strong> Ferritin ≥ 100 µg/L
-          </div>
-          <div className="mt-2 pl-5 text-green-700 font-semibold text-sm group-hover:translate-x-1 transition-transform">
-            👉 Hb düşükse ESA/Roksadustat
-          </div>
-        </button>
-      </div>
-    );
+      // Effect to calculate TSAT automatically
+      useEffect(() => {
+        if (tsatMode === 'calc' && serumIron && tibc && parseFloat(tibc) > 0) {
+          const val = (parseFloat(serumIron) / parseFloat(tibc)) * 100;
+          setCalculatedTsat(val.toFixed(1)); // 1 decimal place
+        } else {
+          setCalculatedTsat(null);
+        }
+      }, [serumIron, tibc, tsatMode]);
 
-    // Step 3 component
+      const handleAnalyze = () => {
+        let finalTsat = null;
+        
+        // Determine final TSAT based on mode and inputs
+        if (tsatMode === 'direct' && tsatInput !== '') {
+            finalTsat = parseFloat(tsatInput);
+        } else if (tsatMode === 'calc' && calculatedTsat !== null) {
+            finalTsat = parseFloat(calculatedTsat);
+        }
+        
+        // Validation: Only Hb and Ferritin are mandatory now
+        if (!hb || !ferritin) {
+          alert("Lütfen Hemoglobin ve Ferritin değerlerini giriniz.");
+          return;
+        }
+
+        setPatientData({
+          hb: parseFloat(hb),
+          ferritin: parseFloat(ferritin),
+          tsat: finalTsat // Can be null if not provided
+        });
+        setStep(2);
+      };
+
+      return (
+        <div className="space-y-5 animate-fade-in">
+          <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-600">
+            <h3 className="font-bold text-lg text-blue-900 flex items-center gap-2">
+              <span data-lucide="calculator" className="w-5 h-5"></span> Hasta Değerleri
+            </h3>
+            <p className="text-sm text-blue-800 mt-1">
+              Tedavi algoritmasını başlatmak için değerleri giriniz.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            {/* Hemoglobin Input */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Hemoglobin (g/dL) <span className="text-red-500">*</span></label>
+              <input 
+                type="number" 
+                value={hb}
+                onChange={(e) => setHb(e.target.value)}
+                placeholder="Örn: 9.5"
+                className="w-full p-3 border border-gray-300 rounded-lg input-focus transition-all"
+              />
+            </div>
+
+            {/* Ferritin Input */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Ferritin (µg/L) <span className="text-red-500">*</span></label>
+              <input 
+                type="number" 
+                value={ferritin}
+                onChange={(e) => setFerritin(e.target.value)}
+                placeholder="Örn: 80"
+                className="w-full p-3 border border-gray-300 rounded-lg input-focus transition-all"
+              />
+            </div>
+
+            {/* TSAT Section */}
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <div className="flex justify-between items-center mb-3">
+                <label className="text-sm font-semibold text-gray-700">TSAT (Opsiyonel)</label>
+                <div className="flex bg-gray-200 rounded p-0.5">
+                  <button 
+                    onClick={() => setTsatMode('direct')}
+                    className={`px-3 py-1 text-xs font-bold rounded transition-all ${tsatMode === 'direct' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500'}`}
+                  >
+                    Biliyorum
+                  </button>
+                  <button 
+                    onClick={() => setTsatMode('calc')}
+                    className={`px-3 py-1 text-xs font-bold rounded transition-all ${tsatMode === 'calc' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500'}`}
+                  >
+                    Hesapla
+                  </button>
+                </div>
+              </div>
+
+              {tsatMode === 'direct' ? (
+                <div className="relative">
+                  <input 
+                    type="number" 
+                    value={tsatInput}
+                    onChange={(e) => setTsatInput(e.target.value)}
+                    placeholder="Örn: 18 (Boş bırakılabilir)"
+                    className="w-full p-3 border border-gray-300 rounded-lg input-focus"
+                  />
+                  <span className="absolute right-4 top-3 text-gray-400 font-bold">%</span>
+                </div>
+              ) : (
+                <div className="space-y-3 animate-fade-in">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs text-gray-500 block mb-1">Serum Demir (µg/dL)</label>
+                      <input 
+                        type="number" 
+                        value={serumIron}
+                        onChange={(e) => setSerumIron(e.target.value)}
+                        placeholder="Demir"
+                        className="w-full p-2 border border-gray-300 rounded input-focus text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500 block mb-1">TDBK (µg/dL)</label>
+                      <input 
+                        type="number" 
+                        value={tibc}
+                        onChange={(e) => setTibc(e.target.value)}
+                        placeholder="Bağlama"
+                        className="w-full p-2 border border-gray-300 rounded input-focus text-sm"
+                      />
+                    </div>
+                  </div>
+                  {calculatedTsat && (
+                    <div className="bg-blue-100 text-blue-800 p-2 rounded text-center font-bold">
+                      Hesaplanan TSAT: %{calculatedTsat}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <button 
+            onClick={handleAnalyze}
+            className="w-full bg-slate-800 hover:bg-black text-white font-bold py-4 px-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg transform hover:scale-[1.02]"
+          >
+            Sonuçları Analiz Et <span data-lucide="arrow-right" className="w-5 h-5"></span>
+          </button>
+        </div>
+      );
+    };
+
+    // Step 2: Analysis Result
+    const Step2 = ({ setStep, patientData, setIronStatus }) => {
+      const { hb, ferritin, tsat } = patientData;
+      
+      // SUT Logic: 
+      // 1. Ferritin < 100 -> Deficient (regardless of TSAT)
+      // 2. TSAT < 20 (if provided) -> Deficient
+      // If Ferritin >= 100 and TSAT is not provided, we assume "Replete" for the sake of the algorithm flow, 
+      // but strictly speaking, low TSAT could still mean functional iron deficiency.
+      
+      const isDeficient = ferritin < 100 || (tsat !== null && tsat < 20);
+      
+      useEffect(() => {
+        // Set iron status state for later steps
+        setIronStatus(isDeficient ? 'deficient' : 'replete');
+      }, [isDeficient, setIronStatus]);
+
+      return (
+        <div className="space-y-5 animate-fade-in">
+          <h3 className="font-bold text-lg text-gray-800 border-b pb-2">Analiz Sonucu</h3>
+          
+          {/* Patient Summary Card */}
+          <div className="bg-white border border-gray-200 rounded-lg p-4 grid grid-cols-3 gap-2 text-center shadow-sm">
+            <div>
+              <div className="text-xs text-gray-500 uppercase tracking-wide">Hb</div>
+              <div className="font-bold text-gray-800 text-lg">{hb}</div>
+            </div>
+            <div className="border-l border-gray-100">
+              <div className="text-xs text-gray-500 uppercase tracking-wide">Ferritin</div>
+              <div className={`font-bold text-lg ${ferritin < 100 ? 'text-red-600' : 'text-gray-800'}`}>{ferritin}</div>
+            </div>
+            <div className="border-l border-gray-100">
+              <div className="text-xs text-gray-500 uppercase tracking-wide">TSAT</div>
+              <div className={`font-bold text-lg ${tsat !== null && tsat < 20 ? 'text-red-600' : 'text-gray-800'}`}>
+                {tsat !== null ? `%${tsat}` : '-'}
+              </div>
+            </div>
+          </div>
+
+          {isDeficient ? (
+            <div className="bg-red-50 border-2 border-red-100 rounded-xl p-5 shadow-sm">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="bg-red-100 p-2 rounded-full">
+                  <span data-lucide="alert-circle" className="w-6 h-6 text-red-600"></span>
+                </div>
+                <h4 className="text-xl font-bold text-red-800">Demir Eksikliği Saptandı</h4>
+              </div>
+              <p className="text-gray-700 mb-4 text-sm leading-relaxed">
+                SUT kriterlerine göre (Ferritin &lt; 100 {tsat !== null && 'veya TSAT < %20'}) hasta demir replasmanı için uygundur.
+              </p>
+              <button 
+                onClick={() => setStep(3)}
+                className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-md"
+              >
+                IV Demir Tedavisine Git <span data-lucide="chevron-right" className="w-5 h-5"></span>
+              </button>
+            </div>
+          ) : (
+             <div className="bg-green-50 border-2 border-green-100 rounded-xl p-5 shadow-sm">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="bg-green-100 p-2 rounded-full">
+                  <span data-lucide="check-circle" className="w-6 h-6 text-green-600"></span>
+                </div>
+                <h4 className="text-xl font-bold text-green-800">Demir Depoları Yeterli</h4>
+              </div>
+              <p className="text-gray-700 mb-4 text-sm leading-relaxed">
+                Mevcut verilere göre demir eksikliği kriterleri karşılanmıyor.
+                {tsat === null && <span className="block mt-2 text-xs text-gray-500 font-semibold">(Not: TSAT girilmediği için sadece Ferritin değerlendirildi.)</span>}
+                <br/>
+                Anemi devam ediyorsa ESA veya Roksadustat değerlendirilmelidir.
+              </p>
+              <button 
+                onClick={() => setStep(5)}
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-md"
+              >
+                ESA / Roksadustat Protokolü <span data-lucide="chevron-right" className="w-5 h-5"></span>
+              </button>
+            </div>
+          )}
+
+          {hb > 12 && (
+             <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200 flex items-start gap-2 text-sm text-yellow-800 mt-3">
+                <span data-lucide="alert-triangle" className="w-5 h-5 flex-shrink-0 mt-0.5"></span>
+                <div>
+                  <strong>Uyarı:</strong> Hb &gt; 12 g/dL. SUT'a göre bu düzeyde aktif tedavi genellikle kesilir veya başlanmaz.
+                </div>
+             </div>
+          )}
+        </div>
+      );
+    };
+
+    // Step 3 component (IV Demir Seçimi)
     const Step3 = ({ setStep, setIronDrug }) => (
       <div className="space-y-4 animate-fade-in">
         <h3 className="font-bold text-lg text-gray-800 border-b pb-2">ADIM 3: IV Demir Seçimi</h3>
         <p className="text-sm text-gray-500 mb-2">Hangi ajanı kullanacaksınız?</p>
         <button 
           onClick={() => { setIronDrug('carboxymaltose'); setStep(4); }}
-          className="w-full p-4 bg-white border border-gray-200 shadow-sm rounded-lg hover:border-blue-400 hover:shadow-md transition-all text-left relative overflow-hidden"
+          className="w-full p-4 bg-white border border-gray-200 shadow-sm rounded-lg hover:border-purple-400 hover:shadow-md transition-all text-left relative overflow-hidden"
         >
           <div className="absolute top-0 right-0 bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-bl-lg font-bold">Hızlı Etki</div>
           <h4 className="font-bold text-gray-800 text-lg">Demir Karboksimaltoz</h4>
@@ -120,7 +311,7 @@
       </div>
     );
 
-    // Step 4 component
+    // Step 4 component (Dozlama)
     const Step4 = ({ setStep, ironDrug, patientType, setPatientType }) => {
       if (ironDrug === 'carboxymaltose') {
         return (
@@ -205,7 +396,7 @@
       );
     };
 
-    // Step 5 component
+    // Step 5 component (SUT Başlama & Seçim)
     const Step5 = ({ setStep, setTreatmentType }) => (
       <div className="space-y-4 animate-fade-in">
         <div className="bg-orange-50 p-4 rounded-lg border border-orange-200 shadow-sm">
@@ -255,7 +446,7 @@
       </div>
     );
 
-    // Step 6 component
+    // Step 6 component (Doz Hesaplama)
     const Step6 = ({ treatmentType, setStep, resetAlgorithm }) => {
       const [weight, setWeight] = useState(null);
       const [patientStatus, setPatientStatus] = useState(null);
@@ -386,7 +577,7 @@
                 </div>
               </div>
             </div>
-            <div classAndFeel="bg-white p-3 border border-blue-200 rounded-lg shadow-sm">
+            <div className="bg-white p-3 border border-blue-200 rounded-lg shadow-sm">
               <h4 className="font-bold text-blue-800 text-sm mb-1 flex justify-between">
                 Metoksipolietilen glikol epoetin beta
                 <span className="text-xs font-normal bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">Mircera®</span>
@@ -430,6 +621,7 @@
     // Main App component
     const App = () => {
       const [step, setStep] = useState(1);
+      const [patientData, setPatientData] = useState({});
       const [ironStatus, setIronStatus] = useState(null);
       const [patientType, setPatientType] = useState(null);
       const [ironDrug, setIronDrug] = useState(null);
@@ -437,6 +629,7 @@
 
       const resetAlgorithm = () => {
         setStep(1);
+        setPatientData({});
         setIronStatus(null);
         setPatientType(null);
         setIronDrug(null);
@@ -472,8 +665,8 @@
               ></div>
             </div>
             <div className="p-5 flex-grow overflow-y-auto">
-              {step === 1 && <Step1 setStep={setStep} />}
-              {step === 2 && <Step2 setStep={setStep} setIronStatus={setIronStatus} />}
+              {step === 1 && <Step1 setStep={setStep} setPatientData={setPatientData} />}
+              {step === 2 && <Step2 setStep={setStep} patientData={patientData} setIronStatus={setIronStatus} />}
               {step === 3 && <Step3 setStep={setStep} setIronDrug={setIronDrug} />}
               {step === 4 && <Step4 setStep={setStep} ironDrug={ironDrug} patientType={patientType} setPatientType={setPatientType} />}
               {step === 5 && <Step5 setStep={setStep} setTreatmentType={setTreatmentType} />}
