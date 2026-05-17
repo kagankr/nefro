@@ -1,0 +1,1532 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MDH Poliklinik Algoritması — MEÜTF Nefroloji</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #f5f1e8;
+    --cream-2: #ebe5d4;
+    --cream-3: #ddd4bd;
+    --ink: #1a2620;
+    --ink-soft: #3a4a42;
+    --muted: #6b7670;
+    --green: #1f4d3a;
+    --green-2: #2d6b52;
+    --green-light: #d4e4d8;
+    --accent: #8b5a2b;
+    --warn: #a04c2c;
+    --warn-bg: #f4dcc8;
+    --danger: #8b2c2c;
+    --danger-bg: #f0d4d0;
+    --info: #2d5a7a;
+    --info-bg: #d4e0eb;
+    --border: #c8bea3;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    line-height: 1.55;
+    min-height: 100vh;
+  }
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 24px;
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 24px;
+  }
+  @media (max-width: 1024px) {
+    .container { grid-template-columns: 1fr; }
+    .sidebar { position: static !important; }
+  }
+  /* HEADER */
+  .header {
+    grid-column: 1 / -1;
+    border-bottom: 2px solid var(--green);
+    padding-bottom: 16px;
+    margin-bottom: 8px;
+  }
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .header h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 1.9rem;
+    color: var(--green);
+    letter-spacing: -0.01em;
+  }
+  .header .subtitle {
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-family: 'IBM Plex Sans', sans-serif;
+    margin-top: 4px;
+  }
+  .header .meta {
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  /* MAIN PANEL */
+  .main {
+    background: #fcfaf4;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 28px;
+    min-height: 600px;
+  }
+  /* PROGRESS BAR */
+  .progress {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 28px;
+    padding-bottom: 16px;
+    border-bottom: 1px dashed var(--border);
+  }
+  .progress-step {
+    flex: 1;
+    height: 4px;
+    background: var(--cream-3);
+    border-radius: 2px;
+    transition: background 0.3s;
+  }
+  .progress-step.active { background: var(--green); }
+  .progress-step.done { background: var(--green-2); }
+  /* STEP */
+  .step { display: none; animation: fadeIn 0.3s; }
+  .step.active { display: block; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .step-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
+  }
+  .step h2 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 1.5rem;
+    color: var(--ink);
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+  }
+  .step p.lead {
+    color: var(--ink-soft);
+    margin-bottom: 20px;
+    font-size: 0.95rem;
+  }
+  /* OPTIONS */
+  .options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+  .option {
+    background: #fff;
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    padding: 14px 18px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: left;
+    font-family: inherit;
+    font-size: 0.95rem;
+    color: var(--ink);
+    width: 100%;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .option:hover {
+    border-color: var(--green);
+    background: var(--cream);
+    transform: translateX(2px);
+  }
+  .option.selected {
+    border-color: var(--green);
+    background: var(--green-light);
+  }
+  .option-icon {
+    color: var(--green);
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    font-size: 0.85rem;
+    min-width: 24px;
+  }
+  .option-text { flex: 1; }
+  .option-title { font-weight: 500; }
+  .option-desc {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+  /* CHECKLIST */
+  .checklist {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 14px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.92rem;
+  }
+  .check-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--green);
+    cursor: pointer;
+    margin-top: 2px;
+  }
+  .check-item label { cursor: pointer; flex: 1; }
+  .check-item .hint {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  /* INPUTS */
+  .input-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .input-group label {
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .input-group input {
+    background: #fff;
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.95rem;
+    color: var(--ink);
+    width: 120px;
+  }
+  .input-group input:focus {
+    outline: none;
+    border-color: var(--green);
+  }
+  /* BUTTONS */
+  .actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px dashed var(--border);
+  }
+  .btn {
+    padding: 10px 22px;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 0.92rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1.5px solid transparent;
+  }
+  .btn-primary {
+    background: var(--green);
+    color: var(--cream);
+  }
+  .btn-primary:hover { background: var(--green-2); }
+  .btn-primary:disabled {
+    background: var(--cream-3);
+    color: var(--muted);
+    cursor: not-allowed;
+  }
+  .btn-secondary {
+    background: transparent;
+    color: var(--green);
+    border-color: var(--border);
+  }
+  .btn-secondary:hover {
+    background: var(--cream);
+    border-color: var(--green);
+  }
+  .btn-restart {
+    background: transparent;
+    color: var(--accent);
+    border-color: var(--accent);
+    font-size: 0.85rem;
+    padding: 6px 14px;
+  }
+  .btn-restart:hover { background: var(--accent); color: var(--cream); }
+  /* RESULT CARDS */
+  .result-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--green);
+    border-radius: 4px;
+    padding: 18px 22px;
+    margin-bottom: 16px;
+  }
+  .result-card.warn {
+    border-left-color: var(--warn);
+    background: var(--warn-bg);
+  }
+  .result-card.danger {
+    border-left-color: var(--danger);
+    background: var(--danger-bg);
+  }
+  .result-card.info {
+    border-left-color: var(--info);
+    background: var(--info-bg);
+  }
+  .result-card h3 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 1.15rem;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+  .result-card .label {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 2px 8px;
+    border-radius: 3px;
+    background: var(--green);
+    color: var(--cream);
+    margin-bottom: 8px;
+  }
+  .result-card.warn .label { background: var(--warn); }
+  .result-card.danger .label { background: var(--danger); }
+  .result-card.info .label { background: var(--info); }
+  .result-card ul { margin-left: 18px; margin-top: 6px; }
+  .result-card li { margin-bottom: 4px; font-size: 0.92rem; }
+  .result-card .dose {
+    background: var(--cream);
+    padding: 10px 14px;
+    border-radius: 4px;
+    margin-top: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.88rem;
+    color: var(--ink);
+    border: 1px dashed var(--border);
+  }
+  .result-card .dose strong { color: var(--green); font-weight: 600; }
+  .result-card .dose .calc {
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 0.92rem;
+  }
+  /* SIDEBAR */
+  .sidebar {
+    position: sticky;
+    top: 24px;
+    align-self: start;
+    background: #fcfaf4;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 22px;
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
+  }
+  .sidebar h3 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 1.1rem;
+    color: var(--green);
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-toggle {
+    width: 100%;
+    background: transparent;
+    border: none;
+    padding: 0 0 12px 0;
+    margin-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 1.1rem;
+    color: var(--green);
+    transition: color 0.15s;
+  }
+  .sidebar-toggle:hover { color: var(--green-2); }
+  .sidebar-toggle .toggle-icon {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.2rem;
+    font-weight: 400;
+    color: var(--accent);
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    transition: transform 0.2s;
+  }
+  .sidebar-toggle.open .toggle-icon { transform: rotate(45deg); }
+  .note-section {
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px dashed var(--cream-3);
+  }
+  .note-section:last-child { border-bottom: none; }
+  .note-section h4 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+  }
+  .note-section p {
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    margin-bottom: 4px;
+  }
+  .note-section .ref {
+    font-size: 0.72rem;
+    color: var(--muted);
+    font-style: italic;
+  }
+  /* TABS in sidebar */
+  .sidebar-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-tab {
+    background: transparent;
+    border: none;
+    padding: 6px 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+  }
+  .sidebar-tab.active {
+    color: var(--green);
+    border-bottom-color: var(--green);
+  }
+  .sidebar-content { display: none; }
+  .sidebar-content.active { display: block; }
+  /* SUMMARY */
+  .summary-box {
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 14px 18px;
+    margin-bottom: 16px;
+    font-size: 0.88rem;
+  }
+  .summary-box .row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    border-bottom: 1px dashed var(--cream-3);
+  }
+  .summary-box .row:last-child { border-bottom: none; }
+  .summary-box .row .key {
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+  }
+  .summary-box .row .val {
+    color: var(--ink);
+    font-weight: 500;
+    text-align: right;
+  }
+  /* FOOTER */
+  .footer {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 16px;
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  /* PILL */
+  .pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.72rem;
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--green-light);
+    color: var(--green);
+    margin-left: 6px;
+  }
+  .pill.kdigo { background: var(--info-bg); color: var(--info); }
+  .pill.uptodate { background: var(--cream-2); color: var(--accent); }
+  /* RED FLAG */
+  .red-flag {
+    background: var(--danger-bg);
+    border-left: 3px solid var(--danger);
+    padding: 10px 14px;
+    margin: 12px 0;
+    border-radius: 0 4px 4px 0;
+    font-size: 0.88rem;
+    color: var(--ink);
+  }
+  .red-flag strong { color: var(--danger); }
+  /* COLLAPSIBLE */
+  details {
+    background: var(--cream);
+    border: 1px dashed var(--border);
+    border-radius: 4px;
+    padding: 8px 14px;
+    margin-top: 10px;
+    font-size: 0.85rem;
+  }
+  details summary {
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  details[open] summary { margin-bottom: 8px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="header">
+    <div class="header-top">
+      <div>
+        <h1>Minimal Değişiklik Hastalığı</h1>
+        <div class="subtitle">Dr. Kağan Karamustafalıoğlu tarafından oluşturuldu</div>
+      </div>
+      <div class="meta">MEÜTF · Nefroloji</div>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="progress" id="progress"></div>
+
+    <!-- STEP 0: Hasta tipi -->
+    <section class="step active" data-step="0">
+      <div class="step-label">Adım 0 · Başlangıç</div>
+      <h2>Hasta nasıl bir profilde?</h2>
+      <p class="lead">Karşımızdaki hastanın durumunu seç. Algoritma buna göre dallanacak.</p>
+      <div class="options" id="patient-type-options">
+        <button class="option" data-value="new"><span class="option-icon">01</span><div class="option-text"><div class="option-title">Yeni tanı MDH (ilk epizod)</div><div class="option-desc">Biyopsi ile yeni MDH tanısı almış, henüz tedavi başlanmamış</div></div></button>
+        <button class="option" data-value="relapse"><span class="option-icon">02</span><div class="option-text"><div class="option-title">Nüks</div><div class="option-desc">Tam remisyon sonrası proteinüri tekrar nefrotik aralığa çıktı</div></div></button>
+        <button class="option" data-value="resistant"><span class="option-icon">03</span><div class="option-text"><div class="option-title">Steroid dirençli MDH</div><div class="option-desc">16 hafta yeterli steroide rağmen yanıt yok</div></div></button>
+        <button class="option" data-value="special"><span class="option-icon">04</span><div class="option-text"><div class="option-title">Özel durum</div><div class="option-desc">Gebelik, ABY eşliği, sekonder MDH şüphesi</div></div></button>
+      </div>
+      <div class="actions">
+        <span></span>
+        <button class="btn btn-primary" id="step0-next" disabled>Devam →</button>
+      </div>
+    </section>
+
+    <!-- STEP 1A: Yeni tanı — tanı doğrulama -->
+    <section class="step" data-step="1a">
+      <div class="step-label">Adım 1 · Tanı doğrulama</div>
+      <h2>Biyopsi bulguları MDH ile uyumlu mu?</h2>
+      <p class="lead">Erişkinde MDH tanısı için biyopsi zorunludur. Aşağıdaki kriterleri işaretle.</p>
+      <div class="checklist">
+        <div class="check-item"><input type="checkbox" id="dx-lm"><label for="dx-lm">Işık mikroskopisi normal<span class="hint">Sklerotik glomerül = FSGS düşün</span></label></div>
+        <div class="check-item"><input type="checkbox" id="dx-if"><label for="dx-if">İmmün floresan normal<span class="hint">C3/IgM için düşük yoğunluklu boyanma olabilir; IgG/IgA pozitifliği şüphe uyandırır</span></label></div>
+        <div class="check-item"><input type="checkbox" id="dx-em"><label for="dx-em">Elektron mikroskopisi pozitif<span class="hint">Elektron-yoğun depozit olmamalı</span></label></div>
+        <div class="check-item"><input type="checkbox" id="dx-clin"><label for="dx-clin">Klinik nefrotik sendrom: proteinüri >3.5 g/gün, hipoalbüminemi, ödem<span class="hint">Ani başlangıç tipiktir (gün-hafta)</span></label></div>
+      </div>
+      <div class="red-flag" id="dx-warn" style="display:none;"><strong>Dikkat:</strong> Eksik kriter var. Biyopsi <em>focal</em> lezyonu kaçırmış olabilir — FSGS dışlanmalı. Biyopsi tekrarı ve EM zorunlu.</div>
+      <div class="actions">
+        <button class="btn btn-secondary" data-prev>← Geri</button>
+        <button class="btn btn-primary" data-next="1b">Devam →</button>
+      </div>
+    </section>
+
+    <!-- STEP 1B: Sekonder neden taraması -->
+    <section class="step" data-step="1b">
+      <div class="step-label">Adım 2 · Sekonder neden taraması</div>
+      <h2>Sekonder MDH için tarama yapıldı mı?</h2>
+      <p class="lead">Erişkin MDH'da sekonder neden mutlaka dışlanmalı. Pozitif çıkarsa primer hastalık tedavisi yerine altta yatan nedene yönel.</p>
+      <div class="checklist">
+        <div class="check-item"><input type="checkbox" id="sec-drug"><label for="sec-drug">İlaç sorgusu yapıldı (negatif)<span class="hint">NSAİİ (en sık), lityum, bisfosfonat, ampisilin, rifampisin, D-penisilamin, ICI'lar, IFN-γ, 5-ASA</span></label></div>
+        <div class="check-item"><input type="checkbox" id="sec-mal"><label for="sec-mal">Malignite taraması yapıldı (negatif)<span class="hint">Hodgkin lenfoma başta, NHL, lösemi; LAP/HSM muayene + LDH + tam kan; >50y düşün toraks/abdomen görüntüleme</span></label></div>
+        <div class="check-item"><input type="checkbox" id="sec-inf"><label for="sec-inf">Enfeksiyon taraması yapıldı (negatif)<span class="hint">HBV, HCV, HIV, sifiliz; klinik şüphede TB, Lyme, mikoplazma</span></label></div>
+        <div class="check-item"><input type="checkbox" id="sec-other"><label for="sec-other">Diğer: atopi öyküsü, eşlik eden GN değerlendirildi<span class="hint">IgA nefropatisi, lupus podositopatisi, C1q nefropati</span></label></div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-secondary" data-prev>← Geri</button>
+        <button class="btn btn-primary" data-next="1c">Devam →</button>
+      </div>
+    </section>
+
+    <!-- STEP 1C: Kilo ve kontrendikasyon -->
+    <section class="step" data-step="1c">
+      <div class="step-label">Adım 3 · Tedavi kararı</div>
+      <h2>Hasta verileri ve yüksek doz steroid kontrendikasyonları</h2>
+      <p class="lead">Doz hesaplaması ve rejim seçimi için aşağıdakileri doldur.</p>
+      <div class="input-row">
+        <div class="input-group">
+          <label>Vücut ağırlığı (kg)</label>
+          <input type="number" id="weight" placeholder="70" min="30" max="200" step="0.5">
+        </div>
+        <div class="input-group">
+          <label>Yaş</label>
+          <input type="number" id="age" placeholder="45" min="16" max="100">
+        </div>
+        <div class="input-group">
+          <label>Serum kreatinin (mg/dL)</label>
+          <input type="number" id="creat" placeholder="1.0" min="0.3" max="15" step="0.1">
+        </div>
+      </div>
+      <h3 style="font-family:'IBM Plex Sans';font-size:0.92rem;font-weight:600;margin-top:14px;margin-bottom:8px;color:var(--ink-soft);">Yüksek doz steroid için rölatif kontrendikasyon</h3>
+      <div class="checklist">
+        <div class="check-item"><input type="checkbox" id="ci-dm" class="ci"><label for="ci-dm">Kontrolsüz diabetes mellitus</label></div>
+        <div class="check-item"><input type="checkbox" id="ci-psy" class="ci"><label for="ci-psy">Aktif psikiyatrik durum (psikoz, mani öyküsü)</label></div>
+        <div class="check-item"><input type="checkbox" id="ci-osteo" class="ci"><label for="ci-osteo">Şiddetli osteoporoz / patolojik kırık öyküsü</label></div>
+        <div class="check-item"><input type="checkbox" id="ci-inf" class="ci"><label for="ci-inf">Aktif/tedavi edilmemiş enfeksiyon (TB, HBV vs.)</label></div>
+        <div class="check-item"><input type="checkbox" id="ci-obese" class="ci"><label for="ci-obese">Morbid obezite (BKI > 40)</label></div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-secondary" data-prev>← Geri</button>
+        <button class="btn btn-primary" id="step1c-next">Tedavi planını oluştur →</button>
+      </div>
+    </section>
+
+    <!-- STEP RESULT NEW: Yeni tanı sonuç -->
+    <section class="step" data-step="result-new">
+      <div class="step-label">Tedavi planı · Yeni tanı MDH</div>
+      <h2 id="result-new-title">Tedavi önerisi</h2>
+      <div id="result-new-content"></div>
+      <div class="actions">
+        <button class="btn btn-secondary" data-prev>← Geri</button>
+        <button class="btn btn-restart" id="restart-1">Yeni hasta</button>
+      </div>
+    </section>
+
+    <!-- STEP 2A: Nüks sıklığı -->
+    <section class="step" data-step="2a">
+      <div class="step-label">Adım 1 · Nüks profili</div>
+      <h2>Nüks paterni nasıl?</h2>
+      <p class="lead">Tedavi seçimi nüksün sıklığına ve steroid bağımlılığına göre değişir.</p>
+      <div class="options" id="relapse-pattern">
+        <button class="option" data-value="infrequent"><span class="option-icon">A</span><div class="option-text"><div class="option-title">Seyrek nüks</div><div class="option-desc">&lt;2 nüks / 6 ay veya &lt;4 nüks / yıl</div></div></button>
+        <button class="option" data-value="frequent"><span class="option-icon">B</span><div class="option-text"><div class="option-title">Sık nüks (SN)</div><div class="option-desc">≥2 nüks / 6 ay veya ≥4 nüks / yıl</div></div></button>
+        <button class="option" data-value="dependent"><span class="option-icon">C</span><div class="option-text"><div class="option-title">Steroid bağımlı (SB)</div><div class="option-desc">Steroid azaltırken veya kestikten sonraki 2 hafta içinde nüks</div></div></button>
+      </div>
+      <div class="actions">
+        <button class="btn btn-secondary" data-prev>← Geri</button>
+        <button class="btn btn-primary" id="step2a-next" disabled>Devam →</button>
+      </div>
+    </section>
+
+    <!-- STEP 2B: Nüks — ek bilgi -->
+    <section class="step" data-step="2b">
+      <div class="step-label">Adım 2 · Klinik bağlam</div>
+      <h2>Ek değerlendirme</h2>
+      <p class="lead">Doz hesabı ve rejim seçimi için ek bilgiler.</p>
+      <div class="input-row">
+        <div class="input-group">
+          <label>Vücut ağırlığı (kg)</label>
+          <input type="number" id="weight-relapse" placeholder="70" min="30" max="200" step="0.5">
+        </div>
+        <div class="input-group">
+          <label>Yaş</label>
+          <input type="number" id="age-relapse" placeholder="45" min="16" max="100">
+        </div>
+      </div>
+      <h3 style="font-family:'IBM Plex Sans';font-size:0.92rem;font-weight:600;margin-top:14px;margin-bottom:8px;color:var(--ink-soft);">Ek faktörler</h3>
+      <div class="checklist">
+        <div class="check-item"><input type="checkbox" id="rel-steroid-tox"><label for="rel-steroid-tox">Önceki steroid dozlarında anlamlı yan etki<span class="hint">DM, osteoporoz, katarakt, aseptik nekroz, davranış değişikliği</span></label></div>
+        <div class="check-item"><input type="checkbox" id="rel-fertility"><label for="rel-fertility">Doğurganlığını korumak isteyen hasta<span class="hint">Siklofosfamid gonadotoksisitesi kontrendikasyon sayılır</span></label></div>
+        <div class="check-item"><input type="checkbox" id="rel-cyc-prev"><label for="rel-cyc-prev">Önceden siklofosfamid kürü almış<span class="hint">Tekrarlanan kür ciddi toksisite — KNİ/RTX'e geçilebilir</span></label></div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-secondary" data-prev>← Geri</button>
+        <button class="btn btn-primary" id="step2b-next">Tedavi planını oluştur →</button>
+      </div>
+    </section>
+
+    <!-- STEP RESULT RELAPSE -->
+    <section class="step" data-step="result-relapse">
+      <div class="step-label">Tedavi planı · Nüks</div>
+      <h2 id="result-relapse-title">Tedavi önerisi</h2>
+      <div id="result-relapse-content"></div>
+      <div class="actions">
+        <button class="btn btn-secondary" data-prev>← Geri</button>
+        <button class="btn btn-restart" id="restart-2">Yeni hasta</button>
+      </div>
+    </section>
+
+    <!-- STEP 3: Steroid dirençli -->
+    <section class="step" data-step="3a">
+      <div class="step-label">Adım 1 · Direnç doğrulama</div>
+      <h2>Gerçekten steroid dirençli mi?</h2>
+      <p class="lead">Apparent direnç olgularının önemli kısmı aslında uygunsuz tedavi veya yanlış tanıdır. Önce bunları dışla.</p>
+      <div class="checklist">
+        <div class="check-item"><input type="checkbox" id="res-adh" checked><label for="res-adh">Tedavi adheransı sorgulandı (hasta düzenli aldı)<span class="hint">Prednizolon alıyorsa aliminyum içerikli antiasit biyoyararlanımı düşürür</span></label></div>
+        <div class="check-item"><input type="checkbox" id="res-dur" checked><label for="res-dur">Yeterli süre ve dozda tedavi aldı<span class="hint">Pred 1 mg/kg/gün veya 2 mg/kg gün aşırı × 16 hafta</span></label></div>
+        <div class="check-item"><input type="checkbox" id="res-pulse"><label for="res-pulse">Pulse metilprednizolon denendi<span class="hint">0.5–1 g gün aşırı × 3 doz — 8-12 haftada yanıt yoksa</span></label></div>
+        <div class="check-item"><input type="checkbox" id="res-bx"><label for="res-bx">Biyopsi tekrar değerlendirildi / yeniden alındı<span class="hint">En sık neden örneklem hatasıyla atlanmış FSGS</span></label></div>
+      </div>
+      <div class="red-flag"><strong>Önemli:</strong> Kısmi yanıt MDH'da nadirdir. Kısmi yanıt veya direnç → büyük olasılıkla FSGS, IgM nefropati veya C1q nefropati. Biyopsi tekrarı şart.</div>
+      <div class="input-row" style="margin-top:16px;">
+        <div class="input-group">
+          <label>Vücut ağırlığı (kg)</label>
+          <input type="number" id="weight-resistant" placeholder="70" min="30" max="200" step="0.5">
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-secondary" data-prev>← Geri</button>
+        <button class="btn btn-primary" id="step3a-next">Tedavi planını oluştur →</button>
+      </div>
+    </section>
+
+    <!-- STEP RESULT RESISTANT -->
+    <section class="step" data-step="result-resistant">
+      <div class="step-label">Tedavi planı · Steroid dirençli</div>
+      <h2>Tedavi önerisi</h2>
+      <div id="result-resistant-content"></div>
+      <div class="actions">
+        <button class="btn btn-secondary" data-prev>← Geri</button>
+        <button class="btn btn-restart" id="restart-3">Yeni hasta</button>
+      </div>
+    </section>
+
+    <!-- STEP 4: Özel durum -->
+    <section class="step" data-step="4a">
+      <div class="step-label">Özel durum</div>
+      <h2>Hangi özel durum?</h2>
+      <p class="lead">Bu durumlar standart algoritmadan farklı yönetim gerektirir.</p>
+      <div class="options" id="special-options">
+        <button class="option" data-value="pregnancy"><span class="option-icon">P</span><div class="option-text"><div class="option-title">Gebelik</div><div class="option-desc">Gebe veya gebelik planlayan hasta</div></div></button>
+        <button class="option" data-value="aby"><span class="option-icon">A</span><div class="option-text"><div class="option-title">ABY eşliği</div><div class="option-desc">Nefrotik sendrom + akut böbrek hasarı</div></div></button>
+        <button class="option" data-value="secondary"><span class="option-icon">S</span><div class="option-text"><div class="option-title">Sekonder MDH</div><div class="option-desc">İlaç, malignite, enfeksiyon kaynaklı</div></div></button>
+      </div>
+      <div class="actions">
+        <button class="btn btn-secondary" data-prev>← Geri</button>
+        <button class="btn btn-primary" id="step4a-next" disabled>Tedavi planını oluştur →</button>
+      </div>
+    </section>
+
+    <!-- STEP RESULT SPECIAL -->
+    <section class="step" data-step="result-special">
+      <div class="step-label">Tedavi planı · Özel durum</div>
+      <h2 id="result-special-title">Tedavi önerisi</h2>
+      <div id="result-special-content"></div>
+      <div class="actions">
+        <button class="btn btn-secondary" data-prev>← Geri</button>
+        <button class="btn btn-restart" id="restart-4">Yeni hasta</button>
+      </div>
+    </section>
+  </main>
+
+  <aside class="sidebar">
+    <button class="sidebar-toggle" id="sidebar-toggle">
+      <span>Klinik Notlar</span>
+      <span class="toggle-icon">+</span>
+    </button>
+    <div class="sidebar-body" id="sidebar-body" style="display:none;">
+      <div class="sidebar-tabs">
+        <button class="sidebar-tab active" data-tab="general">Genel</button>
+        <button class="sidebar-tab" data-tab="defs">Tanımlar</button>
+      </div>
+
+      <div class="sidebar-content active" data-content="general">
+        <div class="note-section">
+          <h4>Yanıt zamanlaması</h4>
+          <p>Remisyonlar <strong>ani</strong> olur — yanıt başladıktan 2–3 hafta içinde proteinürisiz olunur. <strong>Kısmi yanıt MDH'da tipik değildir</strong>; görülürse FSGS düşün.</p>
+        </div>
+        <div class="note-section">
+          <h4>Destekleyici tedavi</h4>
+          <p>• Diyet Na &lt;2 g/gün</p>
+          <p>• KB kontrolü</p>
+          <p>• Diüretik (ödeme göre)</p>
+          <p>• Alb &lt;2.0–2.5 g/dL → antikoagülasyon düşün</p>
+          <p>• Erken remisyon beklenirse <strong>ACE-İ/ARB ve statin rutin verme</strong></p>
+          <p>• Pnömokok aşısı</p>
+        </div>
+      </div>
+
+      <div class="sidebar-content" data-content="defs">
+        <div class="note-section">
+          <h4>Tam remisyon</h4>
+          <p>Proteinüri &lt;0.3 g/gün veya UPCR &lt;300 mg/g + stabil kreatinin + alb &gt;3.5 g/dL</p>
+        </div>
+        <div class="note-section">
+          <h4>Kısmi remisyon</h4>
+          <p>Proteinüri &gt;%50 azalma, mutlak değer 0.3–3.5 g/gün. <em>MDH'da tipik değildir; uzunsa FSGS şüphesi.</em></p>
+        </div>
+        <div class="note-section">
+          <h4>Nüks</h4>
+          <p>Tam remisyon sonrası proteinüri &gt;3.5 g/gün veya UPCR &gt;3500 mg/g</p>
+        </div>
+        <div class="note-section">
+          <h4>Sık nüks</h4>
+          <p>≥2 nüks / 6 ay veya ≥4 nüks / 12 ay</p>
+        </div>
+        <div class="note-section">
+          <h4>Steroid bağımlı</h4>
+          <p>Steroid tedavisi sırasında veya kestikten sonraki 2 hafta içinde nüks</p>
+        </div>
+        <div class="note-section">
+          <h4>Steroid dirençli</h4>
+          <p>Yeterli 16 hafta steroide rağmen proteinüri &gt;3.5 g/gün ve baseline'dan &lt;%50 düşüş</p>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <footer class="footer">
+    Dr. Kağan Karamustafalıoğlu tarafından oluşturuldu · MEÜTF Nefroloji Bilim Dalı<br>
+    Kaynaklar: KDIGO/TND Glomerüler Hastalıklar Kılavuzu · UpToDate 2026
+  </footer>
+</div>
+
+<script>
+// ============ STATE ============
+const state = {
+  current: 0,
+  history: ['0'],
+  patientType: null,
+  relapsePattern: null,
+  specialCase: null,
+  weight: null,
+  age: null,
+  creat: null,
+  contraindications: [],
+  relapseFactors: {}
+};
+
+const stepFlow = {
+  '0': null,
+  '1a': null, '1b': null, '1c': null,
+  '2a': null, '2b': null,
+  '3a': null,
+  '4a': null,
+  'result-new': null,
+  'result-relapse': null,
+  'result-resistant': null,
+  'result-special': null
+};
+
+// ============ NAVIGATION ============
+function showStep(stepId) {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  const step = document.querySelector(`[data-step="${stepId}"]`);
+  if (step) {
+    step.classList.add('active');
+    state.current = stepId;
+    updateProgress();
+    window.scrollTo({top: 0, behavior: 'smooth'});
+  }
+}
+
+function updateProgress() {
+  // Total: 4 max steps depending on branch
+  let total = 3;
+  let current = 1;
+  const id = state.current;
+  if (id === '0') current = 1;
+  else if (id === '1a') { total = 4; current = 2; }
+  else if (id === '1b') { total = 4; current = 3; }
+  else if (id === '1c') { total = 4; current = 4; }
+  else if (id === 'result-new') { total = 4; current = 4; }
+  else if (id === '2a') { total = 3; current = 2; }
+  else if (id === '2b') { total = 3; current = 3; }
+  else if (id === 'result-relapse') { total = 3; current = 3; }
+  else if (id === '3a') { total = 2; current = 2; }
+  else if (id === 'result-resistant') { total = 2; current = 2; }
+  else if (id === '4a') { total = 2; current = 2; }
+  else if (id === 'result-special') { total = 2; current = 2; }
+
+  const progress = document.getElementById('progress');
+  progress.innerHTML = '';
+  for (let i = 0; i < total; i++) {
+    const div = document.createElement('div');
+    div.className = 'progress-step';
+    if (i < current - 1) div.classList.add('done');
+    else if (i === current - 1) div.classList.add('active');
+    progress.appendChild(div);
+  }
+}
+
+// ============ STEP 0: Patient type ============
+document.querySelectorAll('#patient-type-options .option').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#patient-type-options .option').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    state.patientType = btn.dataset.value;
+    document.getElementById('step0-next').disabled = false;
+  });
+});
+
+document.getElementById('step0-next').addEventListener('click', () => {
+  state.history.push(state.current);
+  if (state.patientType === 'new') showStep('1a');
+  else if (state.patientType === 'relapse') showStep('2a');
+  else if (state.patientType === 'resistant') showStep('3a');
+  else if (state.patientType === 'special') showStep('4a');
+});
+
+// ============ BACK BUTTONS ============
+document.querySelectorAll('[data-prev]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (state.history.length > 0) {
+      const prev = state.history.pop();
+      showStep(prev);
+    }
+  });
+});
+
+// ============ NEXT BUTTONS (generic) ============
+document.querySelectorAll('[data-next]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    state.history.push(state.current);
+    showStep(btn.dataset.next);
+  });
+});
+
+// ============ STEP 1A: Diagnosis validation ============
+document.querySelectorAll('[data-step="1a"] input[type=checkbox]').forEach(cb => {
+  cb.addEventListener('change', () => {
+    const all = document.querySelectorAll('[data-step="1a"] input[type=checkbox]');
+    const checked = [...all].filter(c => c.checked).length;
+    document.getElementById('dx-warn').style.display = (checked < all.length) ? 'block' : 'none';
+  });
+});
+
+// ============ STEP 1C: Calculate doses & show result ============
+document.getElementById('step1c-next').addEventListener('click', () => {
+  const w = parseFloat(document.getElementById('weight').value);
+  const age = parseFloat(document.getElementById('age').value);
+  const creat = parseFloat(document.getElementById('creat').value);
+  if (!w || w < 30) { alert('Lütfen geçerli bir kilo girin'); return; }
+  state.weight = w;
+  state.age = age;
+  state.creat = creat;
+  state.contraindications = [...document.querySelectorAll('.ci:checked')].map(c => c.id);
+  state.history.push(state.current);
+  renderNewResult();
+  showStep('result-new');
+});
+
+function renderNewResult() {
+  const w = state.weight;
+  const hasCI = state.contraindications.length > 0;
+  const ciNames = {
+    'ci-dm': 'Kontrolsüz DM',
+    'ci-psy': 'Psikiyatrik durum',
+    'ci-osteo': 'Şiddetli osteoporoz',
+    'ci-inf': 'Aktif enfeksiyon',
+    'ci-obese': 'Morbid obezite'
+  };
+
+  // Doses
+  const predDaily = Math.min(Math.round(w * 1.0), 80);
+  const predAltDay = Math.min(Math.round(w * 2.0), 120);
+  const csaLow = (w * 3).toFixed(0);
+  const csaHigh = (w * 5).toFixed(0);
+  const tacLow = (w * 0.05).toFixed(1);
+  const tacHigh = (w * 0.1).toFixed(1);
+  const predLowDose = Math.min(Math.round(w * 0.5), 40);
+
+  let html = '';
+
+  // Summary
+  html += `<div class="summary-box">
+    <div class="row"><span class="key">HASTA</span><span class="val">${w} kg${state.age ? ', ' + state.age + ' yaş' : ''}</span></div>
+    <div class="row"><span class="key">PROFİL</span><span class="val">Yeni tanı MDH</span></div>
+    <div class="row"><span class="key">STEROID KONTRENDİKASYONU</span><span class="val">${hasCI ? state.contraindications.map(c => ciNames[c]).join(', ') : 'Yok'}</span></div>
+  </div>`;
+
+  if (!hasCI) {
+    // Recommend glucocorticoid monotherapy
+    html += `<div class="result-card">
+      <span class="label">Birinci basamak — Tercih edilen</span>
+      <h3>Glukokortikoid monoterapi <span class="pill kdigo">KDIGO 1C</span></h3>
+      <p style="font-size:0.9rem;color:var(--ink-soft);">Yüksek doz steroid için kontrendikasyon yok. Erişkin MDH'da yanıt oranı %80–95.</p>
+      <div class="dose">
+        <strong>Prednizolon:</strong> 1 mg/kg/gün, sabah tek doz<br>
+        <span class="calc">→ ${w} kg × 1 mg/kg = ${Math.round(w)} mg/gün (maks 80 mg) = <strong>${predDaily} mg/gün</strong></span><br><br>
+        <strong>Alternatif:</strong> 2 mg/kg gün aşırı (yan etki azaltmak için)<br>
+        <span class="calc">→ ${w} kg × 2 mg/kg = ${Math.round(w*2)} mg gün aşırı (maks 120 mg) = <strong>${predAltDay} mg gün aşırı</strong></span>
+      </div>
+      <ul>
+        <li><strong>Başlangıç dozu süresi:</strong> Minimum 4 hafta. Tam remisyon yoksa maks 16 hafta.</li>
+        <li><strong>Azaltım:</strong> Tam remisyondan 1–2 hafta sonra başla. 5–10 mg/hafta azalt. Toplam tedavi süresi ~16–20 hafta (KDIGO 6 aya kadar yavaş azaltım öneriyor).</li>
+        <li><strong>Yanıt zamanlaması:</strong> %50 hasta 4 haftada, %10–25'i 12–16 haftada yanıt verir. Erişkinde yanıt çocuktan daha yavaştır.</li>
+      </ul>
+    </div>`;
+  } else {
+    // Recommend steroid-sparing
+    html += `<div class="result-card warn">
+      <span class="label">Steroid kontrendikasyonu var</span>
+      <h3>Steroid koruyucu rejim</h3>
+      <p style="font-size:0.9rem;color:var(--ink-soft);">Yüksek doz steroide rölatif kontrendikasyon: ${state.contraindications.map(c => ciNames[c]).join(', ')}. KNİ veya MMF + düşük doz steroid önerilir.</p>
+    </div>
+
+    <div class="result-card">
+      <h3>Seçenek 1 — Kalsinörin inhibitörü</h3>
+      <div class="dose">
+        <strong>Siklosporin:</strong> 3–5 mg/kg/gün, 2 doza bölünmüş<br>
+        <span class="calc">→ <strong>${csaLow}–${csaHigh} mg/gün</strong> (~${Math.round(csaLow/2)}–${Math.round(csaHigh/2)} mg 2×1)</span><br>
+        Hedef whole blood trough: 150–200 ng/mL<br><br>
+        <strong>VEYA Takrolimus:</strong> 0.05–0.1 mg/kg/gün, 2 doza bölünmüş<br>
+        <span class="calc">→ <strong>${tacLow}–${tacHigh} mg/gün</strong></span><br>
+        Hedef trough: 4–7 ng/mL
+      </div>
+      <ul>
+        <li>Remisyon sonrası 12 hafta aynı dozda devam → 8 haftada azaltarak kes</li>
+        <li>Toplam tedavi ~6 ay</li>
+        <li>± Düşük doz prednizolon 0.3 mg/kg/gün (~${Math.round(w*0.3)} mg, maks 30 mg) — opsiyonel</li>
+      </ul>
+    </div>
+
+    <div class="result-card">
+      <h3>Seçenek 2 — MMF + düşük doz prednizolon</h3>
+      <div class="dose">
+        <strong>MMF:</strong> İlk hafta 500 mg 2×1, sonra 1 g 2×1 → toplam 6 ay<br>
+        <strong>+ Prednizolon:</strong> 0.5 mg/kg/gün <span class="calc">→ ${predLowDose} mg/gün (maks 40 mg)</span><br>
+        Remisyon sonrası prednizolonu 4–6 haftada azaltarak kes
+      </div>
+    </div>`;
+  }
+
+  // ABY warning
+  if (state.creat && state.creat > 1.4) {
+    html += `<div class="result-card warn">
+      <span class="label">ABY uyarısı</span>
+      <h3>Kreatinin yüksek (${state.creat} mg/dL)</h3>
+      <p>MDH'da ABY %20–25 oranında görülür. İleri yaş, hipertansiyon, ağır nefrotik sendrom risk faktörüdür. Genellikle steroidle düzelir. Renal replasman tedavisi geçici olarak gerekebilir.</p>
+      <ul>
+        <li>Volüm durumunu izle (ödem vs intravasküler hipovolemi)</li>
+        <li>Diüretik dozunu dikkatli ayarla</li>
+        <li>ACE-İ/ARB başlama (ABY riskini artırır)</li>
+        <li>Nefrotoksik ilaçlardan kaçın</li>
+      </ul>
+    </div>`;
+  }
+
+  // Supportive
+  html += `<div class="result-card info">
+    <span class="label">Destekleyici tedavi</span>
+    <h3>Tüm hastalar için</h3>
+    <ul>
+      <li><strong>Diyet:</strong> Na &lt;2 g/gün</li>
+      <li><strong>Ödem:</strong> Diüretik (furosemid başlanabilir, gerekirse loop+tiazid kombinasyonu)</li>
+      <li><strong>KB kontrolü</strong></li>
+      <li><strong>Antikoagülasyon:</strong> Alb &lt;2.0–2.5 g/dL veya başka risk faktörü varsa düşün</li>
+      <li><strong>ACE-İ/ARB ve statin:</strong> Erken remisyon bekleniyorsa <em>rutin başlama</em>. Hızlı remisyon olmazsa eklenebilir.</li>
+      <li><strong>Aşılama:</strong> Pnömokok (PCV13 + PPSV23), inaktif influenza, zoster (steroid başlamadan)</li>
+      <li><strong>Steroid yan etki proflaksisi:</strong> Ca + D vit, kemik dansitometri, glukoz, KB takibi, PPI (yüksek riskli)</li>
+    </ul>
+  </div>
+
+  <div class="result-card info">
+    <span class="label">İzlem planı</span>
+    <h3>Poliklinik takibi</h3>
+    <ul>
+      <li><strong>Aylık:</strong> Spot UPCR, serum albumin, kreatinin, KB</li>
+      <li><strong>Hasta evde:</strong> Haftada 1–2 idrar dipstick (ilk 6 ay), foamy urine veya ödem başlangıcı bildirmesi</li>
+      <li><strong>Yan etki:</strong> Açlık glukozu, kemik sağlığı, göz muayenesi (steroid kürü &gt;3 ay ise)</li>
+      <li><strong>Hasta eğitimi:</strong> Kilo takibi, ödem kayıtlama, infeksiyon belirtileri, tromboz semptomları</li>
+    </ul>
+  </div>`;
+
+  document.getElementById('result-new-content').innerHTML = html;
+}
+
+// ============ STEP 2A: Relapse pattern ============
+document.querySelectorAll('#relapse-pattern .option').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#relapse-pattern .option').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    state.relapsePattern = btn.dataset.value;
+    document.getElementById('step2a-next').disabled = false;
+  });
+});
+
+document.getElementById('step2a-next').addEventListener('click', () => {
+  state.history.push(state.current);
+  showStep('2b');
+});
+
+// ============ STEP 2B → Result ============
+document.getElementById('step2b-next').addEventListener('click', () => {
+  const w = parseFloat(document.getElementById('weight-relapse').value);
+  if (!w || w < 30) { alert('Lütfen geçerli bir kilo girin'); return; }
+  state.weight = w;
+  state.age = parseFloat(document.getElementById('age-relapse').value);
+  state.relapseFactors = {
+    steroidTox: document.getElementById('rel-steroid-tox').checked,
+    fertility: document.getElementById('rel-fertility').checked,
+    cycPrev: document.getElementById('rel-cyc-prev').checked
+  };
+  state.history.push(state.current);
+  renderRelapseResult();
+  showStep('result-relapse');
+});
+
+function renderRelapseResult() {
+  const w = state.weight;
+  const pattern = state.relapsePattern;
+  const f = state.relapseFactors;
+
+  const predDaily = Math.min(Math.round(w * 1.0), 80);
+  const cycLow = (w * 2).toFixed(0);
+  const cycHigh = (w * 2.5).toFixed(0);
+  const csaLow = (w * 3).toFixed(0);
+  const csaHigh = (w * 5).toFixed(0);
+  const tacLow = (w * 0.05).toFixed(1);
+  const tacHigh = (w * 0.1).toFixed(1);
+
+  let html = '';
+
+  // Summary
+  const patternLabel = {
+    'infrequent': 'Seyrek nüks (<2 / 6 ay)',
+    'frequent': 'Sık nüks (≥2 / 6 ay)',
+    'dependent': 'Steroid bağımlı'
+  };
+
+  html += `<div class="summary-box">
+    <div class="row"><span class="key">HASTA</span><span class="val">${w} kg${state.age ? ', ' + state.age + ' yaş' : ''}</span></div>
+    <div class="row"><span class="key">PROFİL</span><span class="val">${patternLabel[pattern]}</span></div>
+    <div class="row"><span class="key">EK FAKTÖR</span><span class="val">${[f.steroidTox && 'Steroid yan etkisi', f.fertility && 'Doğurganlık', f.cycPrev && 'Önceden CYC'].filter(Boolean).join(', ') || 'Yok'}</span></div>
+  </div>`;
+
+  if (pattern === 'infrequent') {
+    // Seyrek nüks
+    html += `<div class="result-card">
+      <span class="label">Seyrek nüks tedavisi</span>
+      <h3>İlk tedaviyi tekrarla <span class="pill kdigo">KDIGO 2D</span></h3>
+      <p style="font-size:0.9rem;color:var(--ink-soft);">Seyrek nükslerde başlangıç tedavisindeki rejim tekrar uygulanır.</p>
+      <div class="dose">
+        <strong>Prednizolon:</strong> 1 mg/kg/gün<br>
+        <span class="calc">→ <strong>${predDaily} mg/gün</strong> × 4 hafta</span><br><br>
+        <strong>Azaltım:</strong> Remisyon sonrası 5 mg/3–5 günde bir azalt → 1–2 ayda kes
+      </div>
+      <ul>
+        <li>Daha kısa azaltım yeterli olabilir (kısa kürün rebound riski olabilir; nüks tekrarlarsa standart 16–20 hafta süreye çık)</li>
+        <li>Nüks bir alerji veya viral infeksiyondan tetiklendiyse genellikle 1 ay içinde remisyon</li>
+      </ul>
+    </div>`;
+
+    if (f.steroidTox) {
+      html += `<div class="result-card warn">
+        <span class="label">Alternatif</span>
+        <h3>Steroid yan etkisi varsa</h3>
+        <p>Önceki kürlerde anlamlı yan etki gelişmişse steroid yerine KNİ veya MMF + düşük doz pred ile başlanabilir. (Bkz. sık nüks tedavisi.)</p>
+      </div>`;
+    }
+
+  } else {
+    // SN/SB
+    html += `<div class="result-card info">
+      <span class="label">Birinci basamak</span>
+      <h3>SN/SB için seçenekler</h3>
+      <p style="font-size:0.9rem;color:var(--ink-soft);">UpToDate 2026: Siklofosfamid, rituksimab, KNİ veya MMF — herhangi biri uygundur. Tercih hasta profiline göre.</p>
+      <p style="font-size:0.9rem;color:var(--ink-soft);margin-top:8px;"><em>İlk relaps tedavisi ile remisyon sağlandıktan sonra ikinci basamak ajan başla; steroid 1 ayda azaltılarak kesilir.</em></p>
+    </div>`;
+
+    // Siklofosfamid (eğer kontrendike değilse)
+    if (!f.fertility && !f.cycPrev) {
+      html += `<div class="result-card">
+        <h3>Seçenek 1 — Siklofosfamid (oral) <span class="pill kdigo">KDIGO 2C</span></h3>
+        <div class="dose">
+          <strong>Siklofosfamid:</strong> 2–2.5 mg/kg/gün, sabah tek doz<br>
+          <span class="calc">→ <strong>${cycLow}–${cycHigh} mg/gün</strong> (maks 200 mg/gün)</span><br><br>
+          <strong>Süre:</strong> 8 hafta (KDIGO) veya 12 hafta (UpToDate)
+        </div>
+        <details>
+          <summary>Süre tartışması</summary>
+          <p style="margin-top:6px;font-size:0.85rem;">TND/KDIGO 2012 kılavuzu 8 haftalık kürü standart kabul eder. UpToDate (2026) ise hem çocuk hem erişkin verilerinde 8 haftanın 12 haftadan daha az etkili olduğunu öne sürer. Pratik tercih: hasta tolere ediyorsa ve sitopeni gelişmiyorsa 12 hafta. Sitopeni veya yan etki gelişirse 8 haftada sonlandır.</p>
+        </details>
+        <ul>
+          <li>WBC &gt;3500/μL ve ANC &gt;1500/μL hedefle — dozu buna göre ayarla</li>
+          <li>İnfertilite riski mutlaka hasta ve gerekirse eşine anlatılmalı, yazılı onam alın</li>
+          <li>Hemorajik sistit profilaksisi: bol su, sabah doz</li>
+          <li>Pneumocystis profilaksisi (TMP-SMX) gerekirse</li>
+          <li><strong>Kümülatif doz takibi:</strong> Tekrar kür kontrendike — gonadotoksisite ve sekonder malignite riski</li>
+        </ul>
+      </div>`;
+    }
+
+    // KNİ
+    const cniLabel = (f.fertility || f.cycPrev) ? '1' : '2';
+    const cniNote = f.fertility ? '<strong>Doğurganlık koruyacaklar için birinci tercih.</strong>' : (f.cycPrev ? '<strong>Önceden siklofosfamid alanlarda tercih.</strong>' : '');
+
+    html += `<div class="result-card">
+      <h3>Seçenek ${cniLabel} — Kalsinörin inhibitörü <span class="pill kdigo">KDIGO 2C</span></h3>
+      ${cniNote ? `<p style="font-size:0.9rem;color:var(--ink-soft);">${cniNote}</p>` : ''}
+      <div class="dose">
+        <strong>Siklosporin:</strong> 3–5 mg/kg/gün, 2 doza bölünmüş<br>
+        <span class="calc">→ <strong>${csaLow}–${csaHigh} mg/gün</strong> (~${Math.round(csaLow/2)}–${Math.round(csaHigh/2)} mg 2×1)</span><br>
+        Trough hedef: 150–200 ng/mL<br><br>
+        <strong>VEYA Takrolimus:</strong> 0.05–0.1 mg/kg/gün, 2 doza bölünmüş<br>
+        <span class="calc">→ <strong>${tacLow}–${tacHigh} mg/gün</strong></span><br>
+        Trough hedef: 4–7 ng/mL
+      </div>
+      <ul>
+        <li><strong>Süre:</strong> Remisyon sonrası en az 12–18 ay aynı dozda; sonra en düşük etkili doza azalt (siklosporin için &lt;3 mg/kg/gün hedefi)</li>
+        <li>İdame 18–24 ay, sonra 4–6 ayda yavaş azaltarak kes</li>
+        <li><strong>Nefrotoksisite takibi:</strong> Kreatinin baseline'dan &gt;%30 artarsa biyopsi düşün</li>
+        <li>KB ve glukoz takibi (özellikle takrolimus)</li>
+        <li><strong>Nüks riski:</strong> KNİ kesimi sonrası nüks oranı CYC'den yüksektir (~%60 ilk yıl)</li>
+      </ul>
+    </div>`;
+
+    // MMF
+    html += `<div class="result-card">
+      <h3>Seçenek ${parseInt(cniLabel)+1} — MMF <span class="pill kdigo">KDIGO 2D</span></h3>
+      <p style="font-size:0.9rem;color:var(--ink-soft);">Steroid, siklofosfamid ve KNİ intoleransında.</p>
+      <div class="dose">
+        <strong>MMF:</strong> İlk hafta 500 mg 2×1, sonra <strong>1 g 2×1</strong> → 1–2 yıl<br>
+        <em>Veya EC-MPS:</em> 360 mg 2×1 → 720 mg 2×1
+      </div>
+      <ul>
+        <li>± Düşük doz prednizolon 10 mg/gün opsiyonel</li>
+        <li>1 yıl sonra remisyon stabilse yavaş azalt</li>
+        <li>Gebelikte kontrendike</li>
+      </ul>
+    </div>`;
+  }
+
+  document.getElementById('result-relapse-content').innerHTML = html;
+}
+
+// ============ STEP 3A: Resistant → Result ============
+document.getElementById('step3a-next').addEventListener('click', () => {
+  const w = parseFloat(document.getElementById('weight-resistant').value);
+  if (!w || w < 30) { alert('Lütfen geçerli bir kilo girin'); return; }
+  state.weight = w;
+  state.history.push(state.current);
+  renderResistantResult();
+  showStep('result-resistant');
+});
+
+function renderResistantResult() {
+  const w = state.weight;
+  const csaDose = (w * 5).toFixed(0);
+  const tacLow = (w * 0.05).toFixed(1);
+  const tacHigh = (w * 0.1).toFixed(1);
+  const predLow = Math.min(Math.round(w * 0.15), 15);
+
+  let html = `<div class="summary-box">
+    <div class="row"><span class="key">HASTA</span><span class="val">${w} kg</span></div>
+    <div class="row"><span class="key">PROFİL</span><span class="val">Steroid dirençli MDH</span></div>
+  </div>
+
+  <div class="result-card danger">
+    <span class="label">Önemli</span>
+    <h3>Önce yeniden değerlendir</h3>
+    <p>Erişkinde steroid dirençli MDH'nın önemli kısmı aslında <strong>biyopside örneklem hatasıyla atlanmış FSGS</strong>'dir. Kortikosteroid direncini onaylamadan önce:</p>
+    <ul>
+      <li>Tedavi adheransını sorgula</li>
+      <li>Biyopsiyi yeniden değerlendir / tekrarla — EM mutlaka olmalı</li>
+      <li>Pulse metilprednizolon (0.5–1 g gün aşırı × 3 doz) denenmediyse dene</li>
+      <li>Minimal değişiklik varyantlarını dışla (IgM nefropati, C1q, idiyopatik mezangial proliferasyon)</li>
+    </ul>
+  </div>
+
+  <div class="result-card">
+    <span class="label">Tedavi</span>
+    <h3>Kalsinörin inhibitörü ± düşük doz steroid</h3>
+    <p style="font-size:0.9rem;color:var(--ink-soft);">Steroid dirençli MDH'da tedavi yaklaşımı steroid dirençli FSGS ile aynıdır.</p>
+    <div class="dose">
+      <strong>Siklosporin:</strong> 5 mg/kg/gün, 2 doza bölünmüş<br>
+      <span class="calc">→ <strong>${csaDose} mg/gün</strong> (~${Math.round(csaDose/2)} mg 2×1)</span><br>
+      Trough: 150–200 ng/mL · Süre: 6 ay; yanıt varsa devam, 2 ayda %25 azalt<br><br>
+      <strong>VEYA Takrolimus:</strong> 0.05–0.1 mg/kg/gün<br>
+      <span class="calc">→ <strong>${tacLow}–${tacHigh} mg/gün</strong></span><br><br>
+      <strong>± Prednizolon:</strong> 10–15 mg/gün (~${predLow} mg) — Fransız serisinde eş zamanlı düşük doz pred yanıtı artırıyor
+    </div>
+    <ul>
+      <li><strong>Yanıt değerlendirme:</strong> 2 ayda erken yanıt görülür. 3 ayda antiproteinürik etki yoksa KNİ direncidir.</li>
+      <li>KNİ kesimi sonrası nüks sık — yanıt varsa 1 yıldan uzun tedaviyle yavaş azaltım</li>
+      <li><strong>Kreatinin baseline'dan &gt;%30 artarsa</strong> biyopsi tekrarı (KNİ nefrotoksisitesi vs FSGS progresyonu)</li>
+    </ul>
+  </div>
+
+  <div class="result-card info">
+    <span class="label">Alternatifler</span>
+    <h3>KNİ yanıtsızlığında</h3>
+    <ul>
+      <li><strong>Rituksimab:</strong> Bu grupta etkinliği zayıf (UpToDate: steroid hassas grubun aksine dirençlide daha az etkili). Yine de denenebilir.</li>
+      <li><strong>Siklofosfamid:</strong> Erişkin steroid dirençli MDH'da veri sınırlı; FSGS protokolünde uygulanabilir.</li>
+      <li>Klinik araştırma / üçüncü basamak değerlendirme</li>
+    </ul>
+  </div>
+
+  <div class="result-card info">
+    <span class="label">Destekleyici tedavi</span>
+    <h3>Persistan nefrotik sendromda</h3>
+    <ul>
+      <li><strong>ACE-İ / ARB:</strong> Bu grupta antiproteinürik amaçla başla</li>
+      <li><strong>Statin:</strong> Hiperlipidemi tedavisi (kalıcı NS'de KV risk)</li>
+      <li><strong>Antikoagülasyon:</strong> Alb &lt;2.0–2.5 g/dL için aktif olarak değerlendir</li>
+      <li>Tromboz, infeksiyon, malnütrisyon takibi</li>
+    </ul>
+  </div>`;
+
+  document.getElementById('result-resistant-content').innerHTML = html;
+}
+
+// ============ STEP 4A: Special case ============
+document.querySelectorAll('#special-options .option').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#special-options .option').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    state.specialCase = btn.dataset.value;
+    document.getElementById('step4a-next').disabled = false;
+  });
+});
+
+document.getElementById('step4a-next').addEventListener('click', () => {
+  state.history.push(state.current);
+  renderSpecialResult();
+  showStep('result-special');
+});
+
+function renderSpecialResult() {
+  const sc = state.specialCase;
+  let html = '';
+  let title = '';
+
+  if (sc === 'pregnancy') {
+    title = 'Gebelikte MDH';
+    html = `<div class="result-card danger">
+      <span class="label">Önemli kontrendikasyonlar</span>
+      <h3>Gebelikte kaçınılacak ilaçlar</h3>
+      <ul>
+        <li><strong>Mutlak kontrendike:</strong> Siklofosfamid, MMF, Rituksimab</li>
+        <li>Bu ilaçlar gebelik planlanıyorsa kesilmeli (MMF için en az 6 hafta, RTX için 6 ay önce)</li>
+      </ul>
+    </div>
+
+    <div class="result-card">
+      <span class="label">Tercih edilen</span>
+      <h3>Glukokortikoid (1. tercih)</h3>
+      <p style="font-size:0.9rem;color:var(--ink-soft);">Erişkin gebede MDH tedavisinde prednizolon güvenli kabul edilir.</p>
+      <ul>
+        <li>Prednizolon plasentadan az geçer (plasentada 11β-hidroksisteroid dehidrogenaz tarafından inaktive olur)</li>
+        <li>Standart dozda kullan: 1 mg/kg/gün</li>
+        <li>Gestasyonel DM, hipertansiyon, erken doğum riski açısından takip</li>
+      </ul>
+    </div>
+
+    <div class="result-card warn">
+      <h3>KNİ — alternatif</h3>
+      <p style="font-size:0.9rem;color:var(--ink-soft);">Steroid yetersiz veya kontrendike ise siklosporin/takrolimus kullanılabilir, ancak yan etki profili biraz daha az güvenli.</p>
+      <ul>
+        <li>Prematür doğum, düşük doğum ağırlığı riski</li>
+        <li>İlaç düzeyleri gebelik fizyolojisi nedeniyle değişebilir — sık takip</li>
+        <li>Maternal-fetal medisin konsültasyonu</li>
+      </ul>
+    </div>
+
+    <div class="result-card info">
+      <h3>Yönetim prensibi</h3>
+      <ul>
+        <li>Glomerüler hastalıkta deneyimli merkeze yönlendir</li>
+        <li>Nefroloji + maternal-fetal medisin ortak takibi</li>
+        <li>Kontrasepsiyon ve gebelik öncesi planlama — tedavi başlamadan konuş</li>
+        <li>Aktif nefrotik sendromda gebelik prognozu kötü (preeklampsi, IUGR riski)</li>
+      </ul>
+    </div>`;
+
+  } else if (sc === 'aki') {
+    title = 'MDH + Akut Böbrek Hasarı';
+    html = `<div class="result-card info">
+      <span class="label">Epidemiyoloji</span>
+      <h3>Erişkin MDH'da ABY</h3>
+      <p>MDH'lı erişkinlerin %20–25'inde ABY gelişir. Çocuklarda nadirdir. Bazı hastalarda diyaliz ihtiyacı doğabilir.</p>
+      <p style="margin-top:8px;"><strong>Risk faktörleri:</strong> ileri yaş, hipertansiyon, ağır nefrotik sendrom (alb &lt;2 g/dL), altta yatan böbrek arteriosklerozu, NSAİİ kullanımı.</p>
+    </div>
+
+    <div class="result-card">
+      <span class="label">Tedavi prensibi</span>
+      <h3>Standart tedavi + destekleyici</h3>
+      <ul>
+        <li><strong>Steroidi başla / sürdür:</strong> ABY varlığı steroidi geciktirmek için neden değildir; aksine altta yatan MDH'nın tedavisi prognozu belirler</li>
+        <li><strong>Volüm değerlendirmesi:</strong>
+          <ul>
+            <li>Ağır intravasküler hipovolemi varsa dikkatli izotonik/albumin replasmanı</li>
+            <li>Belirgin ödemde diüretik (loop ± tiazid) — etkisizse i.v.</li>
+          </ul>
+        </li>
+        <li><strong>Endikeyse RRT</strong> — genellikle geçicidir</li>
+        <li><strong>Nefrotoksik ilaçlardan kaçın:</strong> NSAİİ, ACE-İ/ARB (akut fazda), iyotlu kontrast, aminoglikozid</li>
+      </ul>
+    </div>
+
+    <div class="result-card">
+      <h3>Prognoz</h3>
+      <ul>
+        <li>ABY gelişen hastalar tablo ağır olsa bile tipik olarak iyileşir</li>
+        <li>Bir kısmında rezidüel KBH kalabilir</li>
+        <li>Persistant ABY veya diyaliz bağımlılığı varsa biyopsi tekrarı düşün — atlanmış FSGS, kollabe FSGS, ATN superpozisyonu olabilir</li>
+      </ul>
+    </div>`;
+
+  } else if (sc === 'secondary') {
+    title = 'Sekonder MDH';
+    html = `<div class="result-card warn">
+      <span class="label">Genel prensip</span>
+      <h3>Önce altta yatan nedeni tedavi et</h3>
+      <p>Sekonder MDH'da primer immünsüpresif tedavi yerine altta yatan sebebin tedavisi önceliklidir. Çoğunda neden ortadan kalkınca proteinüri düzelir.</p>
+    </div>
+
+    <div class="result-card">
+      <h3>İlaca bağlı MDH</h3>
+      <p style="font-size:0.9rem;color:var(--ink-soft);">En sık sekonder neden. İlaç kesilince çoğunda hızlı remisyon.</p>
+      <ul>
+        <li><strong>NSAİİ</strong> (en sık) — selektif COX-2 dahil</li>
+        <li>Lityum, bisfosfonatlar (pamidronat dahil)</li>
+        <li>Antibiyotikler: ampisilin, rifampisin, sefalosporinler</li>
+        <li>D-penisilamin, tiyopronin</li>
+        <li>Sulfasalazin, 5-ASA</li>
+        <li>İmmün checkpoint inhibitörleri (pembrolizumab, nivolumab, ipilimumab)</li>
+        <li>IFN-γ, civa içeren cilt beyazlatıcılar</li>
+      </ul>
+      <ul style="margin-top:10px;">
+        <li><strong>Yaklaşım:</strong> İlacı kes, 2–4 hafta gözle. Yanıt yoksa veya ağır nefrotik sendrom varsa kısa steroid kürü.</li>
+      </ul>
+    </div>
+
+    <div class="result-card">
+      <h3>Maligniteye bağlı MDH</h3>
+      <ul>
+        <li><strong>En sık ilişki:</strong> Hodgkin lenfoma (klasik birliktelik), NHL, lösemi</li>
+        <li>Solid tümörlerde MDH nadir (timoma, RCC, mezotelyoma, bronkojenik ca)</li>
+        <li>Proteinüri sıklıkla malignite remisyonuyla düzelir</li>
+        <li>MDH lenfomanın aylar–yıllar öncesinde ortaya çıkabilir (~%38 vakada)</li>
+      </ul>
+      <ul style="margin-top:10px;">
+        <li><strong>Yaklaşım:</strong> Malignite tedavisi öncelikli. Steroid kararı onkolog ile birlikte. Malignite kontrol altına alınınca MDH genellikle düzelir.</li>
+      </ul>
+    </div>
+
+    <div class="result-card">
+      <h3>Enfeksiyona bağlı MDH</h3>
+      <ul>
+        <li>Sifiliz, TB, mikoplazma, HCV, HIV (kollabe FSGS de olabilir), Lyme, ehrlichioz</li>
+        <li>Enfeksiyon tedavisi sıklıkla MDH'yı düzeltir</li>
+      </ul>
+    </div>
+
+    <div class="result-card info">
+      <h3>Genel takip</h3>
+      <ul>
+        <li>İlaç kesimi / hastalık tedavisi sonrası 4–8 haftada UPCR takibi</li>
+        <li>Proteinüri devam ederse veya ağır nefrotik sendrom varsa primer MDH gibi steroid başla</li>
+        <li>Destekleyici tedavi (Na kısıtlama, diüretik, antikoagülasyon değerlendirmesi)</li>
+      </ul>
+    </div>`;
+  }
+
+  document.getElementById('result-special-title').textContent = title;
+  document.getElementById('result-special-content').innerHTML = html;
+}
+
+// ============ RESTART ============
+function restart() {
+  state.current = 0;
+  state.history = [];
+  state.patientType = null;
+  state.relapsePattern = null;
+  state.specialCase = null;
+  state.weight = null;
+  state.age = null;
+  state.creat = null;
+  state.contraindications = [];
+  state.relapseFactors = {};
+  // Reset all inputs
+  document.querySelectorAll('input').forEach(i => {
+    if (i.type === 'checkbox') {
+      // Keep diagnosis defaults only for resistant step (adherence + duration assumed)
+      if (i.closest('[data-step="3a"]')) {
+        i.checked = (i.id === 'res-adh' || i.id === 'res-dur');
+      } else {
+        i.checked = false;
+      }
+    } else {
+      i.value = '';
+    }
+  });
+  document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+  document.getElementById('step0-next').disabled = true;
+  document.getElementById('step2a-next').disabled = true;
+  document.getElementById('step4a-next').disabled = true;
+  document.getElementById('dx-warn').style.display = 'none';
+  showStep('0');
+}
+['restart-1','restart-2','restart-3','restart-4'].forEach(id => {
+  document.getElementById(id).addEventListener('click', restart);
+});
+
+// ============ SIDEBAR TOGGLE ============
+document.getElementById('sidebar-toggle').addEventListener('click', () => {
+  const body = document.getElementById('sidebar-body');
+  const toggle = document.getElementById('sidebar-toggle');
+  if (body.style.display === 'none') {
+    body.style.display = 'block';
+    toggle.classList.add('open');
+  } else {
+    body.style.display = 'none';
+    toggle.classList.remove('open');
+  }
+});
+
+// ============ SIDEBAR TABS ============
+document.querySelectorAll('.sidebar-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.sidebar-content').forEach(c => c.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelector(`[data-content="${tab.dataset.tab}"]`).classList.add('active');
+  });
+});
+
+// ============ INIT ============
+updateProgress();
+</script>
+</body>
+</html>
